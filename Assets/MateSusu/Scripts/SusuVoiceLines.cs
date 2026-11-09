@@ -19,6 +19,20 @@ public class SusuVoiceLines : MonoBehaviour
         public string label;     // shown on the menu button
         public string text;      // what Susu says
         public string direction; // extra acting direction used when generating
+        public string hours;     // auto-talk window, 24h: "5-11", "22-4", "13-15,22-4" (empty = any time)
+        public bool noAuto;      // true = only when the user clicks it
+
+        public bool AllowedAt(int hour)
+        {
+            if (string.IsNullOrWhiteSpace(hours)) return true;
+            foreach (var part in hours.Split(','))
+            {
+                var ab = part.Split('-');
+                if (ab.Length != 2 || !int.TryParse(ab[0].Trim(), out int a) || !int.TryParse(ab[1].Trim(), out int b)) continue;
+                if (a <= b ? (hour >= a && hour <= b) : (hour >= a || hour <= b)) return true;
+            }
+            return false;
+        }
     }
 
 #pragma warning disable 0649 // filled by JsonUtility

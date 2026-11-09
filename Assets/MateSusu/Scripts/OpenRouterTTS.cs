@@ -78,6 +78,7 @@ public class OpenRouterTTS : MonoBehaviour
         speed = MateSusuEnv.GetFloat("OPENROUTER_TTS_SPEED", speed);
         pitch = MateSusuEnv.GetFloat("OPENROUTER_TTS_PITCH", pitch);
         volume = MateSusuEnv.GetFloat("OPENROUTER_TTS_VOLUME", volume);
+        if (PlayerPrefs.HasKey(VolumePref)) volume = Mathf.Clamp01(PlayerPrefs.GetFloat(VolumePref));
 
         source = gameObject.AddComponent<AudioSource>();
         source.playOnAwake = false;
@@ -99,6 +100,20 @@ public class OpenRouterTTS : MonoBehaviour
     }
 
     public bool HasApiKey => !string.IsNullOrEmpty(apiKey);
+
+    const string VolumePref = "MateSusu.VoiceVolume";
+
+    /// <summary>Susu's voice volume (chat replies and voice lines). Saved between sessions.</summary>
+    public float Volume
+    {
+        get => volume;
+        set
+        {
+            volume = Mathf.Clamp01(value);
+            if (source != null) source.volume = volume;
+            PlayerPrefs.SetFloat(VolumePref, volume);
+        }
+    }
 
     /// <summary>Speaks the text if TTS is enabled. Interrupts anything already playing.</summary>
     public void Speak(string text, Action onStarted = null, Action onFinished = null)

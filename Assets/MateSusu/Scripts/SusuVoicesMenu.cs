@@ -19,8 +19,16 @@ public class SusuVoicesMenu : MonoBehaviour
     const string WindowTemplate = "AlarmMenuCanvas";
     const string IconResource = "SusuVoicesIcon";
 
+    // Templates for the auto-talk controls (settings menu: GENERAL > Discord RPC toggle, AUDIO > Pet Volumen slider)
+    const string ToggleTemplate = "Discord RPC";
+    const string SliderTemplate = "Pet Volumen";
+
     // Phrase grid inside the window's scroll content
     const float ButtonWidth = 280f, ButtonHeight = 58f, ColumnX = 150f, RowSpacing = 14f, TopPadding = 24f;
+    // Auto-talk controls block above the grid
+    const float ControlsHeight = 250f, SliderWidth = 520f;
+
+    TMP_Text frequencyLabel, volumeLabel;
 
     public string windowTitle = "VOICES";
 
@@ -183,9 +191,19 @@ public class SusuVoicesMenu : MonoBehaviour
         var fitter = content.GetComponent<ContentSizeFitter>();
         if (fitter != null) fitter.enabled = false;
 
+        float gridTop = TopPadding;
+        var toggleTemplate = FindSceneObject(ToggleTemplate);
+        var sliderTemplate = FindSceneObject(SliderTemplate);
+        if (toggleTemplate != null && sliderTemplate != null)
+        {
+            BuildControls(content, toggleTemplate.transform as RectTransform, sliderTemplate.transform as RectTransform);
+            gridTop = ControlsHeight;
+        }
+        else Debug.LogWarning("[SusuVoice] Toggle/slider templates not found - auto-talk controls skipped.");
+
         var phrases = SusuVoiceLines.Instance.Phrases;
         int rows = Mathf.CeilToInt(phrases.Count / 2f);
-        content.sizeDelta = new Vector2(content.sizeDelta.x, TopPadding * 2f + rows * (ButtonHeight + RowSpacing));
+        content.sizeDelta = new Vector2(content.sizeDelta.x, gridTop + TopPadding + rows * (ButtonHeight + RowSpacing));
 
         for (int i = 0; i < phrases.Count; i++)
         {
@@ -197,7 +215,7 @@ public class SusuVoicesMenu : MonoBehaviour
             btn.pivot = new Vector2(0.5f, 0.5f);
             btn.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
             btn.anchoredPosition = new Vector2(col == 0 ? -ColumnX : ColumnX,
-                -(TopPadding + row * (ButtonHeight + RowSpacing) + ButtonHeight * 0.5f));
+                -(gridTop + row * (ButtonHeight + RowSpacing) + ButtonHeight * 0.5f));
 
             var phrase = p;
             var label = Rebind(btn, p.label, () => SusuVoiceLines.Instance?.Play(phrase));
@@ -212,6 +230,116 @@ public class SusuVoicesMenu : MonoBehaviour
 
         Debug.Log($"[SusuVoice] Voices window ready ({phrases.Count} phrases).");
         return true;
+    }
+
+    // ---------- Auto-talk controls ----------
+
+    void BuildControls(RectTransform content, RectTransform toggleTemplate, RectTransform sliderTemplate)
+    {
+        float width = content.rect.width > 100f ? content.rect.width : 633f;
+        var auto = SusuAutoTalk.Instance;
+        var tts = OpenRouterTTS.Instance;
+
+        // "Susu talks by herself" checkbox
+        var toggleRect = CloneControl(toggleTemplate, content, "AutoTalk Toggle");
+        var info = toggleRect.Find("INFO");
+        if (info != null) DestroyImmediate(info.gameObject);
+        toggleRect.anchoredPosition = new Vector2(-width * 0.5f + 40f + toggleRect.sizeDelta.x * 0.5f, -40f);
+        SetLabel(toggleRect, "SUSU TALKS BY HERSELF");
+        var toggle = toggleRect.GetComponent<Toggle>();
+        if (toggle != null)
+        {
+            toggle.onValueChanged = new Toggle.ToggleEvent();
+            toggle.SetIsOnWithoutNotify(auto != null && auto.Enabled);
+            toggle.onValueChanged.AddListener(v => { if (SusuAutoTalk.Instance != null) SusuAutoTalk.Instance.Enabled = v; });
+        }
+
+        // Frequency slider (minutes)
+        var freqRect = CloneControl(sliderTemplate, content, "AutoTalk Frequency");
+        PlaceSlider(freqRect, -125f);
+        frequencyLabel = freqRect.GetComponentInChildren<TMP_Text>(true);
+        var freq = freqRect.GetComponent<Slider>();
+        if (freq != null)
+        {
+            freq.onValueChanged = new Slider.SliderEvent();
+            freq.minValue = SusuAutoTalk.MinMinutes;
+            freq.maxValue = SusuAutoTalk.MaxMinutes;
+            freq.wholeNumbers = true;
+            freq.SetValueWithoutNotify(auto != null ? auto.IntervalMinutes : 5);
+            freq.onValueChanged.AddListener(v =>
+            {
+                if (SusuAutoTalk.Instance != null) SusuAutoTalk.Instance.IntervalMinutes = Mathf.RoundToInt(v);
+                UpdateFrequencyLabel(Mathf.RoundToInt(v));
+            });
+            UpdateFrequencyLabel(Mathf.RoundToInt(freq.value));
+        }
+
+        // Voice volume slider
+        var volRect = CloneControl(sliderTemplate, content, "Voice Volume");
+        PlaceSlider(volRect, -205f);
+        volumeLabel = volRect.GetComponentInChildren<TMP_Text>(true);
+        var vol = volRect.GetComponent<Slider>();
+        if (vol != null)
+        {
+            vol.onValueChanged = new Slider.SliderEvent();
+            vol.minValue = 0f;
+            vol.maxValue = 1f;
+            vol.wholeNumbers = false;
+            vol.SetValueWithoutNotify(tts != null ? tts.Volume : 1f);
+            vol.onValueChanged.AddListener(v =>
+            {
+                if (OpenRouterTTS.Instance != null) OpenRouterTTS.Instance.Volume = v;
+                UpdateVolumeLabel(v);
+            });
+            UpdateVolumeLabel(vol.value);
+        }
+    }
+
+    void PlaceSlider(RectTransform rect, float y)
+    {
+        float oldWidth = rect.sizeDelta.x;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.sizeDelta = new Vector2(SliderWidth, rect.sizeDelta.y);
+        rect.anchoredPosition = new Vector2(0f, y);
+
+        // The label sits above the slider, aligned to its left edge; keep that alignment after resizing.
+        var label = rect.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+        {
+            var lr = label.rectTransform;
+            float offsetFromLeft = lr.anchoredPosition.x + oldWidth * 0.5f;
+            lr.anchoredPosition = new Vector2(-SliderWidth * 0.5f + offsetFromLeft, lr.anchoredPosition.y);
+        }
+    }
+
+    void UpdateFrequencyLabel(int minutes)
+    {
+        if (frequencyLabel != null)
+            frequencyLabel.text = minutes == 1 ? "TALK FREQUENCY: ABOUT EVERY MINUTE" : $"TALK FREQUENCY: ABOUT EVERY {minutes} MIN";
+    }
+
+    void UpdateVolumeLabel(float v)
+    {
+        if (volumeLabel != null) volumeLabel.text = $"VOICE VOLUME: {Mathf.RoundToInt(v * 100f)}%";
+    }
+
+    static void SetLabel(RectTransform rect, string text)
+    {
+        var label = rect.GetComponentInChildren<TMP_Text>(true);
+        if (label != null) label.text = text;
+    }
+
+    /// <summary>Copies a settings control into our (inactive) window and strips its settings/localisation scripts.</summary>
+    static RectTransform CloneControl(RectTransform template, Transform parent, string name)
+    {
+        var copy = Instantiate(template.gameObject, parent);
+        copy.name = name;
+        foreach (var mb in copy.GetComponentsInChildren<MonoBehaviour>(true))
+            if (mb != null && !(mb is Graphic) && !(mb is Selectable)) DestroyImmediate(mb);
+        var rect = (RectTransform)copy.transform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        return rect;
     }
 
     static TMP_Text Rebind(RectTransform rect, string text, UnityAction onClick)
