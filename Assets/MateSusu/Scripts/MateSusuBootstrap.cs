@@ -26,6 +26,7 @@ public static class MateSusuBootstrap
         Root.AddComponent<SusuVoiceLines>();
         Root.AddComponent<SusuAutoTalk>();
         Root.AddComponent<SusuClipPlayer>();
+        Root.AddComponent<SusuMotions>();
         Root.AddComponent<SusuVoicesMenu>();
     }
 }

@@ -1,0 +1,159 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf6318b6f7d2b604d9a08a9848be4ba3, type: 3}
+  m_Name: SusuMotionLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::SusuMotionLibrary
+  motions:
+  - name: cheer
+    clip: {fileID: -4671056281497532287, guid: 424772bbe7d8c294fb16aee72bd9f99e, type: 3}
+    start: 4.6
+    end: 9.4
+  - name: celebrate
+    clip: {fileID: -4671056281497532287, guid: e68081839d790704e94bfd1fee7c71a3, type: 3}
+    start: 6.3
+    end: 7.8
+  - name: jump
+    clip: {fileID: -4671056281497532287, guid: 540159499f7f3054ebe7f1ab4edea0e3, type: 3}
+    start: 4.5
+    end: 8.2
+  - name: clap
+    clip: {fileID: -4671056281497532287, guid: bcee04a2d94d39b45832257c205688f1, type: 3}
+    start: 4
+    end: 9
+  - name: happydance
+    clip: {fileID: -4671056281497532287, guid: 58c4bb664b00dea4194b837d8c8f95bb, type: 3}
+    start: 3
+    end: 9
+  - name: shimmy
+    clip: {fileID: -4671056281497532287, guid: 5d85305a027442443974e56623610cf6, type: 3}
+    start: 2
+    end: 7
+  - name: sway
+    clip: {fileID: -4671056281497532287, guid: 821822e8ba2818d49a2f71f7ab1cad02, type: 3}
+    start: 1
+    end: 9
+  - name: laugh
+    clip: {fileID: -4671056281497532287, guid: dc5639b693d86c7418a1471c533caa55, type: 3}
+    start: 15
+    end: 20
+  - name: happy
+    clip: {fileID: 7400000, guid: 77f33fbbab3e94e41ac667133e1afdd0, type: 2}
+    start: 0
+    end: 0
+  - name: giggle
+    clip: {fileID: 7400000, guid: a5e8cc322431f4b43aa7762aab58f93d, type: 2}
+    start: 0
+    end: 0
+  - name: flirty
+    clip: {fileID: -4671056281497532287, guid: 85840b99a35eba44b9225a8a44918640, type: 3}
+    start: 8.5
+    end: 13.5
+  - name: cheekhand
+    clip: {fileID: -4671056281497532287, guid: ac82da83493e1024f8bdff877836d042, type: 3}
+    start: 52
+    end: 55.5
+  - name: shypoint
+    clip: {fileID: 7400000, guid: b1505d9790a48b249b0f6beb2375420a, type: 2}
+    start: 0
+    end: 0
+  - name: behindback
+    clip: {fileID: -4671056281497532287, guid: 6e530830c7ecfac4c8c26f187e902a7c, type: 3}
+    start: 16.5
+    end: 24.5
+  - name: tilt
+    clip: {fileID: -4671056281497532287, guid: a807b8a0daefc0c4195ccf247cd479cf, type: 3}
+    start: 3.5
+    end: 6.5
+  - name: explain
+    clip: {fileID: -4671056281497532287, guid: 70e30bfdae8c47c42b218ac4c4bbe7c1, type: 3}
+    start: 12
+    end: 17
+  - name: present
+    clip: {fileID: -4671056281497532287, guid: 2657af3376c03b448b6d1efbf7435314, type: 3}
+    start: 7
+    end: 13
+  - name: point
+    clip: {fileID: -4671056281497532287, guid: 055fa048a509d454d99ecf1f4f028d59, type: 3}
+    start: 6.5
+    end: 12
+  - name: idea
+    clip: {fileID: -4671056281497532287, guid: fa2808d8e8276fd4da782080907d470a, type: 3}
+    start: 23.5
+    end: 27.5
+  - name: taphead
+    clip: {fileID: -4671056281497532287, guid: 7754d370fd0ba6447a83d20de46353e2, type: 3}
+    start: 7.3
+    end: 11.5
+  - name: shrug
+    clip: {fileID: -4671056281497532287, guid: e624098d97d77814ea244268ed716a36, type: 3}
+    start: 5.3
+    end: 8
+  - name: nod
+    clip: {fileID: -4234491588545506125, guid: c26eefcf83e2e43459b46a6f3af0547e, type: 3}
+    start: 0
+    end: 0
+  - name: headshake
+    clip: {fileID: 5000254507835852519, guid: c26eefcf83e2e43459b46a6f3af0547e, type: 3}
+    start: 0
+    end: 0
+  - name: nonono
+    clip: {fileID: -4671056281497532287, guid: 6bf498800da7ed743bfffa3c85c0c7a2, type: 3}
+    start: 6
+    end: 12
+  - name: lookaround
+    clip: {fileID: -4671056281497532287, guid: bffd9960b84da564d9742b52366eadd6, type: 3}
+    start: 3
+    end: 11
+  - name: foldarms
+    clip: {fileID: -7062361950610221846, guid: c26eefcf83e2e43459b46a6f3af0547e, type: 3}
+    start: 0
+    end: 4
+  - name: proud
+    clip: {fileID: -4671056281497532287, guid: 9768ffadec1b6974aac204f3ad62e953, type: 3}
+    start: 46.6
+    end: 52.5
+  - name: stretch
+    clip: {fileID: -4671056281497532287, guid: 8a8354cc93affc249be83159a3d3406d, type: 3}
+    start: 9
+    end: 12.2
+  - name: drink
+    clip: {fileID: -4671056281497532287, guid: 5a4cf3d7da05f634ba84a8be2211e211, type: 3}
+    start: 7.5
+    end: 13
+  - name: eat
+    clip: {fileID: -4671056281497532287, guid: e5aeddc1b05ef844bad6ebd094b87911, type: 3}
+    start: 14
+    end: 19.5
+  - name: nibble
+    clip: {fileID: -5566208886993524023, guid: c26eefcf83e2e43459b46a6f3af0547e, type: 3}
+    start: 0
+    end: 0
+  - name: phone
+    clip: {fileID: -4671056281497532287, guid: 8842566e3f67fa74daa183f81d0dc886, type: 3}
+    start: 3.5
+    end: 8.5
+  - name: watch
+    clip: {fileID: -4671056281497532287, guid: 6e530830c7ecfac4c8c26f187e902a7c, type: 3}
+    start: 25.5
+    end: 31.8
+  - name: facepalm
+    clip: {fileID: -4671056281497532287, guid: 0eed457319a262c4d8095907ae2a86cd, type: 3}
+    start: 3.5
+    end: 8.5
+  - name: headpanic
+    clip: {fileID: -4671056281497532287, guid: 225d2300d5642bf43b64fa6a7d1db386, type: 3}
+    start: 2.5
+    end: 7.5
+  - name: impatient
+    clip: {fileID: -4671056281497532287, guid: f9b0e5962b339944aac807eb70d49031, type: 3}
+    start: 4.5
+    end: 10.5

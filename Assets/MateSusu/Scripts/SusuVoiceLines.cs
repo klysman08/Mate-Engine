@@ -20,6 +20,7 @@ public class SusuVoiceLines : MonoBehaviour
         public string text;      // what Susu says
         public string direction; // extra acting direction used when generating
         public string category;  // section title in the Voices window
+        public string motion;    // body motion(s) while speaking, names from SusuMotionLibrary: "cheer" or "drink,nod"
         public string hours;     // auto-talk window, 24h: "5-11", "22-4", "13-15,22-4" (empty = any time)
         public bool noAuto;      // true = only when the user clicks it
 

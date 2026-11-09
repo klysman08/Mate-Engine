@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 65bae12bb1df3df41b03d3cae1196fd0
+guid: ac82da83493e1024f8bdff877836d042
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -35,7 +35,7 @@ ModelImporter:
       takeName: clip
       internalID: -4671056281497532287
       firstFrame: 0
-      lastFrame: 3073
+      lastFrame: 1503
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -44,13 +44,13 @@ ModelImporter:
       hasAdditiveReferencePose: 0
       loopTime: 0
       loopBlend: 0
-      loopBlendOrientation: 1
+      loopBlendOrientation: 0
       loopBlendPositionY: 1
-      loopBlendPositionXZ: 1
-      keepOriginalOrientation: 1
-      keepOriginalPositionY: 1
-      keepOriginalPositionXZ: 1
-      heightFromFeet: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 0
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 1
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
