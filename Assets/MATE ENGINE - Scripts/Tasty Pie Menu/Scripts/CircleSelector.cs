@@ -7,7 +7,8 @@ namespace Xamin
 {
     public class CircleSelector : MonoBehaviour
     {
-        [Range(2, 10)] private int buttonCount;
+        public const int MaxButtons = 12;
+        [Range(2, MaxButtons)] private int buttonCount;
         private int startButCount;
 
         [Header("Customization")]
@@ -354,7 +355,7 @@ namespace Xamin
             }
             buttonCount = visibleCount;
 
-            if (buttonCount > 0 && buttonCount < 11)
+            if (buttonCount > 0 && buttonCount <= MaxButtons) // MateSusu: was < 11, raised to fit the Voices slice
             {
                 startButCount = buttonCount;
                 _desiredFill = 1f / buttonCount;

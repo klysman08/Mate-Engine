@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 
 /// <summary>
 /// Streaming chat client for OpenRouter (OpenAI-compatible /chat/completions).
-/// Created automatically at startup when a key is found in .env, and kept alive across scenes.
+/// Created by MateSusuBootstrap when a key is found in .env.
 /// </summary>
 public class OpenRouterChat : MonoBehaviour
 {
@@ -39,25 +39,7 @@ public class OpenRouterChat : MonoBehaviour
     public bool IsActive => active && !string.IsNullOrEmpty(apiKey);
     public bool IsBusy => current != null;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    static void Bootstrap()
-    {
-        if (Instance != null) return;
-        var key = MateSusuEnv.GetFirst("OPENROUTER_API_KEY", "API_KEY");
-        if (string.IsNullOrEmpty(key))
-        {
-            Debug.Log("[OpenRouter] No API key in .env - using the local LLM.");
-            return;
-        }
-
-        var go = new GameObject("MateSusu OpenRouter");
-        DontDestroyOnLoad(go);
-        var chat = go.AddComponent<OpenRouterChat>();
-        chat.Configure(key);
-        go.AddComponent<OpenRouterTTS>();
-    }
-
-    void Configure(string key)
+    public void Configure(string key)
     {
         apiKey = key;
         model = MateSusuEnv.Get("OPENROUTER_CHAT_MODEL", DefaultModel);

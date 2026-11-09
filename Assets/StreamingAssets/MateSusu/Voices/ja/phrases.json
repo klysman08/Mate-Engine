@@ -1,0 +1,17 @@
+{
+  "language": "ja",
+  "phrases": [
+    { "id": "ohayou",       "label": "Good morning",   "text": "おはよう！今日もいっしょにがんばろうね。",   "direction": "bright, energetic morning greeting" },
+    { "id": "konnichiwa",   "label": "Hello",          "text": "こんにちは！スースーだよ。会えてうれしいな。", "direction": "happy, excited" },
+    { "id": "okaeri",       "label": "Welcome back",   "text": "おかえりなさい！ずっと待ってたよ。",         "direction": "overjoyed, warm" },
+    { "id": "itterasshai",  "label": "See you later",  "text": "いってらっしゃい！気をつけてね。",           "direction": "gentle, caring" },
+    { "id": "oyasumi",      "label": "Good night",     "text": "おやすみなさい。いい夢見てね。",             "direction": "soft, whispering, sleepy" },
+    { "id": "fight",        "label": "You can do it!", "text": "ファイト！スースーが応援してるよ！",         "direction": "cheering, enthusiastic" },
+    { "id": "kyuukei",      "label": "Take a break",   "text": "ちょっと休憩しよう？お水も飲んでね。",       "direction": "concerned, gentle" },
+    { "id": "sugoi",        "label": "Great job!",     "text": "すごいすごい！よくがんばったね！",           "direction": "proud, delighted" },
+    { "id": "arigatou",     "label": "Thank you",      "text": "ありがとう！とってもうれしいな。",           "direction": "grateful, shy smile" },
+    { "id": "kamatte",      "label": "Play with me",   "text": "ねえねえ、ちょっとかまって？",               "direction": "pouty, pleading, cute" },
+    { "id": "ehehe",        "label": "Ehehe~",         "text": "えへへ、照れちゃうな。",                     "direction": "giggling, embarrassed" },
+    { "id": "nemui",        "label": "Sleepy...",      "text": "ふわぁ…ちょっと眠くなってきちゃった。",     "direction": "yawning, drowsy" }
+  ]
+}

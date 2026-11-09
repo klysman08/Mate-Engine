@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -59,6 +60,7 @@ public class OpenRouterTTS : MonoBehaviour
     GameObject avatarRoot;
     VRMBlendShapeProxy proxy0;
     Vrm10Instance vrm1;
+    Animator avatarAnimator;
     VRMLoader loader;
     float nextAvatarCheck;
 
@@ -96,27 +98,42 @@ public class OpenRouterTTS : MonoBehaviour
         if (source != null) source.Stop();
     }
 
+    public bool HasApiKey => !string.IsNullOrEmpty(apiKey);
+
     /// <summary>Speaks the text if TTS is enabled. Interrupts anything already playing.</summary>
     public void Speak(string text, Action onStarted = null, Action onFinished = null)
     {
-        if (!speakReplies || string.IsNullOrEmpty(apiKey)) return;
+        if (!speakReplies || !HasApiKey) return;
         text = CleanForSpeech(text);
         if (text.Length == 0) return;
         Stop();
-        StartCoroutine(SpeakRoutine(text, onStarted, onFinished));
+        string voice = IsMostlyJapanese(text) ? voiceJa : voiceEn;
+        StartCoroutine(SynthesizeRoutine(text, voice, instructions,
+            (pcm, rate) => PlayClip(PcmToClip(pcm, rate), onStarted, onFinished, true),
+            null));
     }
 
-    IEnumerator SpeakRoutine(string text, Action onStarted, Action onFinished)
+    /// <summary>
+    /// Generates speech and returns raw 16-bit mono PCM (little endian) and its sample rate.
+    /// extraDirection is appended to the configured delivery instructions.
+    /// </summary>
+    public void Synthesize(string text, bool japanese, string extraDirection, Action<byte[], int> onDone, Action<string> onError)
     {
-        string voice = IsMostlyJapanese(text) ? voiceJa : voiceEn;
+        if (!HasApiKey) { onError?.Invoke("No OpenRouter API key in .env"); return; }
+        string direction = string.Join(", ", new[] { instructions, extraDirection }
+            .Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()));
+        StartCoroutine(SynthesizeRoutine(text, japanese ? voiceJa : voiceEn, direction, onDone, onError));
+    }
 
+    IEnumerator SynthesizeRoutine(string text, string voice, string direction, Action<byte[], int> onDone, Action<string> onError)
+    {
         // Built by hand so optional fields are omitted instead of sent empty.
         var json = new StringBuilder("{");
         json.Append("\"model\":").Append(Json(model));
         json.Append(",\"input\":").Append(Json(text));
         json.Append(",\"response_format\":\"pcm\"");
         if (!string.IsNullOrWhiteSpace(voice)) json.Append(",\"voice\":").Append(Json(voice.Trim()));
-        if (!string.IsNullOrWhiteSpace(instructions)) json.Append(",\"instructions\":").Append(Json(instructions.Trim()));
+        if (!string.IsNullOrWhiteSpace(direction)) json.Append(",\"instructions\":").Append(Json(direction.Trim()));
         if (Mathf.Abs(speed - 1f) > 0.001f)
             json.Append(",\"speed\":").Append(speed.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
         json.Append('}');
@@ -137,37 +154,67 @@ public class OpenRouterTTS : MonoBehaviour
         bool aborted = current != req;
         if (!aborted) current = null;
 
-        AudioClip clip = null;
+        byte[] pcm = null;
+        int rate = PcmSampleRate;
         try
         {
             if (aborted) yield break;
             if (req.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogWarning($"[OpenRouter] TTS failed ({req.responseCode}): {req.downloadHandler.text}");
+                string err = $"TTS failed ({req.responseCode}): {req.downloadHandler.text}";
+                Debug.LogWarning("[OpenRouter] " + err);
+                onError?.Invoke(err);
                 yield break;
             }
-
-            string type = req.GetResponseHeader("Content-Type") ?? "";
-            int rate = ParseRate(type, PcmSampleRate);
-            clip = PcmToClip(req.downloadHandler.data, rate);
-            if (clip == null) { Debug.LogWarning("[OpenRouter] TTS returned no audio (" + type + ")"); yield break; }
+            rate = ParseRate(req.GetResponseHeader("Content-Type") ?? "", PcmSampleRate);
+            pcm = req.downloadHandler.data;
         }
         finally
         {
             req.Dispose();
         }
 
+        if (pcm == null || pcm.Length < 2) { onError?.Invoke("TTS returned no audio"); yield break; }
+        onDone?.Invoke(pcm, rate);
+    }
+
+    /// <summary>Plays a clip through Susu's voice source with lip sync and the talking animation.</summary>
+    public void PlayClip(AudioClip clip, Action onStarted = null, Action onFinished = null, bool destroyWhenDone = false)
+    {
+        if (clip == null) return;
+        if (source.isPlaying) source.Stop();
+        StartCoroutine(PlayRoutine(clip, onStarted, onFinished, destroyWhenDone));
+    }
+
+    IEnumerator PlayRoutine(AudioClip clip, Action onStarted, Action onFinished, bool destroyWhenDone)
+    {
         source.clip = clip;
         source.volume = volume;
         source.pitch = pitch;
         source.Play();
+        SetTalking(true);
         onStarted?.Invoke();
 
         while (source != null && source.isPlaying && source.clip == clip) yield return null;
 
+        bool stillOurs = source != null && source.clip == clip;
+        if (stillOurs) { SetTalking(false); source.clip = null; }
         onFinished?.Invoke();
-        if (source != null && source.clip == clip) source.clip = null;
-        Destroy(clip);
+        if (destroyWhenDone) Destroy(clip);
+    }
+
+    void SetTalking(bool on)
+    {
+        RefreshAvatar();
+        if (avatarAnimator != null && HasParam(avatarAnimator, IsTalkingHash)) avatarAnimator.SetBool(IsTalkingHash, on);
+    }
+
+    static readonly int IsTalkingHash = Animator.StringToHash("isTalking");
+
+    static bool HasParam(Animator a, int hash)
+    {
+        foreach (var p in a.parameters) if (p.nameHash == hash) return true;
+        return false;
     }
 
     // ---------- Lip sync ----------
@@ -216,6 +263,7 @@ public class OpenRouterTTS : MonoBehaviour
         avatarRoot = found;
         vrm1 = found != null ? found.GetComponentInChildren<Vrm10Instance>(true) : null;
         proxy0 = found != null && vrm1 == null ? found.GetComponentInChildren<VRMBlendShapeProxy>(true) : null;
+        avatarAnimator = found != null ? found.GetComponentInChildren<Animator>(true) : null;
     }
 
     // ---------- Helpers ----------
@@ -261,7 +309,7 @@ public class OpenRouterTTS : MonoBehaviour
         return m.Success && int.TryParse(m.Groups[1].Value, out var r) ? r : fallback;
     }
 
-    static AudioClip PcmToClip(byte[] pcm, int rate)
+    public static AudioClip PcmToClip(byte[] pcm, int rate)
     {
         if (pcm == null || pcm.Length < 2) return null;
         int count = pcm.Length / 2;
