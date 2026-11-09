@@ -23,6 +23,12 @@ public class OpenRouterChat : MonoBehaviour
     [Tooltip("How many previous messages (user + assistant) are sent as context.")]
     [Min(0)] public int historyLimit = 20;
 
+    [Header("Character")]
+    [Tooltip("Resources/<name>.txt holding the character persona (system prompt).")]
+    public string personaResource = "SusuPersona";
+    [Tooltip("auto = mirror the user's language (English or Japanese only), en = English, ja = Japanese")]
+    public string language = "auto";
+
     [Header("Runtime")]
     [SerializeField] bool active;
 
@@ -58,7 +64,35 @@ public class OpenRouterChat : MonoBehaviour
         temperature = MateSusuEnv.GetFloat("OPENROUTER_TEMPERATURE", temperature);
         maxTokens = Mathf.RoundToInt(MateSusuEnv.GetFloat("OPENROUTER_MAX_TOKENS", maxTokens));
         active = MateSusuEnv.GetBool("OPENROUTER_CHAT_ENABLED", true);
-        Debug.Log($"[OpenRouter] Chat {(active ? "enabled" : "disabled")} - model '{model}' (config: {MateSusuEnv.LoadedFrom})");
+        language = MateSusuEnv.Get("OPENROUTER_LANGUAGE", language).Trim().ToLowerInvariant();
+        Debug.Log($"[OpenRouter] Chat {(active ? "enabled" : "disabled")} - model '{model}', language '{language}' (config: {MateSusuEnv.LoadedFrom})");
+    }
+
+    /// <summary>Persona from Resources plus the language rule. Falls back to the given prompt if the persona is missing.</summary>
+    public string BuildSystemPrompt(string fallbackPrompt)
+    {
+        var persona = Resources.Load<TextAsset>(personaResource);
+        string basePrompt = persona != null ? persona.text.Trim() : fallbackPrompt;
+        string rule = LanguageRule(language);
+        if (string.IsNullOrWhiteSpace(basePrompt)) return rule;
+        return basePrompt + "\n\nLanguage:\n- " + rule;
+    }
+
+    static string LanguageRule(string lang)
+    {
+        switch (lang)
+        {
+            case "en":
+            case "english":
+                return "Always reply in English, even if the user writes in another language.";
+            case "ja":
+            case "jp":
+            case "japanese":
+                return "Always reply in Japanese (日本語), even if the user writes in another language.";
+            default:
+                return "Reply in English or Japanese only. If the user's latest message is in Japanese, reply in Japanese; " +
+                       "otherwise (English, Portuguese or anything else) reply in English. Never mix both languages in one reply.";
+        }
     }
 
     void Awake()

@@ -8,24 +8,36 @@ using UniVRM10;
 using VRM;
 
 /// <summary>
-/// Text-to-speech through OpenRouter's /audio/speech endpoint (default: hexgrad/kokoro-82m),
+/// Text-to-speech through OpenRouter's /audio/speech endpoint (default: fish-audio/drama-3),
 /// played as 16-bit PCM with simple amplitude-based lip sync on the current VRM avatar.
 /// </summary>
 [DefaultExecutionOrder(1000)] // after UniversalBlendshapes / animator writes, before VRM10 applies expressions
 public class OpenRouterTTS : MonoBehaviour
 {
     public const string Endpoint = "https://openrouter.ai/api/v1/audio/speech";
-    public const string DefaultModel = "hexgrad/kokoro-82m";
-    public const string DefaultVoice = "pf_dora"; // Kokoro Brazilian Portuguese female (pm_alex = male)
-    const int PcmSampleRate = 24000;              // Kokoro returns audio/pcm;rate=24000;channels=1
+    public const string DefaultModel = "fish-audio/drama-3";
+    // Fish Audio: voice = a Fish "reference_id" (empty = provider default voice), delivery via [bracket] directions.
+    // Kokoro (hexgrad/kokoro-82m) also works: voices af_heart / jf_alpha etc.
+    public const string DefaultVoiceEn = "";
+    public const string DefaultVoiceJa = "";
+    public const string DefaultInstructions = "cute, cheerful, affectionate young girl, soft and sweet";
+    const int PcmSampleRate = 24000; // fallback when the Content-Type has no rate (Fish sends 44100, Kokoro 24000)
 
     public static OpenRouterTTS Instance { get; private set; }
 
     [Header("Config (filled from .env at startup)")]
     public bool speakReplies = true;
     public string model = DefaultModel;
-    public string voice = DefaultVoice;
+    [Tooltip("Voice used for English replies.")]
+    public string voiceEn = DefaultVoiceEn;
+    [Tooltip("Voice used when the reply is mostly Japanese text.")]
+    public string voiceJa = DefaultVoiceJa;
+    [Tooltip("Delivery direction (tone/emotion). Fish Audio turns it into a [direction] before the text; OpenAI/Gemini TTS also honour it.")]
+    public string instructions = DefaultInstructions;
+    [Tooltip("Only sent when different from 1 (many providers reject a non-default speed).")]
     [Range(0.5f, 2f)] public float speed = 1f;
+    [Tooltip("Playback pitch. Slightly above 1 makes the voice brighter (also a bit faster).")]
+    [Range(0.8f, 1.3f)] public float pitch = 1f;
     [Range(0f, 1f)] public float volume = 1f;
     [Tooltip("Longer texts are cut at a sentence boundary to keep latency and cost low.")]
     [Min(50)] public int maxChars = 600;
@@ -58,15 +70,18 @@ public class OpenRouterTTS : MonoBehaviour
         apiKey = MateSusuEnv.GetFirst("OPENROUTER_API_KEY", "API_KEY");
         speakReplies = MateSusuEnv.GetBool("OPENROUTER_TTS_ENABLED", true);
         model = MateSusuEnv.Get("OPENROUTER_TTS_MODEL", DefaultModel);
-        voice = MateSusuEnv.Get("OPENROUTER_TTS_VOICE", DefaultVoice);
+        voiceEn = MateSusuEnv.Get("OPENROUTER_TTS_VOICE_EN", DefaultVoiceEn);
+        voiceJa = MateSusuEnv.Get("OPENROUTER_TTS_VOICE_JA", DefaultVoiceJa);
+        instructions = MateSusuEnv.Get("OPENROUTER_TTS_INSTRUCTIONS", DefaultInstructions);
         speed = MateSusuEnv.GetFloat("OPENROUTER_TTS_SPEED", speed);
+        pitch = MateSusuEnv.GetFloat("OPENROUTER_TTS_PITCH", pitch);
         volume = MateSusuEnv.GetFloat("OPENROUTER_TTS_VOLUME", volume);
 
         source = gameObject.AddComponent<AudioSource>();
         source.playOnAwake = false;
         source.spatialBlend = 0f;
 
-        Debug.Log($"[OpenRouter] TTS {(speakReplies ? "enabled" : "disabled")} - model '{model}', voice '{voice}'");
+        Debug.Log($"[OpenRouter] TTS {(speakReplies ? "enabled" : "disabled")} - model '{model}', voices en='{Show(voiceEn)}' ja='{Show(voiceJa)}', direction '{instructions}', pitch {pitch}");
     }
 
     void OnDestroy()
@@ -93,18 +108,22 @@ public class OpenRouterTTS : MonoBehaviour
 
     IEnumerator SpeakRoutine(string text, Action onStarted, Action onFinished)
     {
-        var body = new SpeechRequest
-        {
-            model = model,
-            input = text,
-            voice = voice,
-            response_format = "pcm",
-            speed = speed
-        };
+        string voice = IsMostlyJapanese(text) ? voiceJa : voiceEn;
+
+        // Built by hand so optional fields are omitted instead of sent empty.
+        var json = new StringBuilder("{");
+        json.Append("\"model\":").Append(Json(model));
+        json.Append(",\"input\":").Append(Json(text));
+        json.Append(",\"response_format\":\"pcm\"");
+        if (!string.IsNullOrWhiteSpace(voice)) json.Append(",\"voice\":").Append(Json(voice.Trim()));
+        if (!string.IsNullOrWhiteSpace(instructions)) json.Append(",\"instructions\":").Append(Json(instructions.Trim()));
+        if (Mathf.Abs(speed - 1f) > 0.001f)
+            json.Append(",\"speed\":").Append(speed.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+        json.Append('}');
 
         var req = new UnityWebRequest(Endpoint, UnityWebRequest.kHttpVerbPOST)
         {
-            uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(JsonUtility.ToJson(body))),
+            uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json.ToString())),
             downloadHandler = new DownloadHandlerBuffer(),
             timeout = 60
         };
@@ -140,6 +159,7 @@ public class OpenRouterTTS : MonoBehaviour
 
         source.clip = clip;
         source.volume = volume;
+        source.pitch = pitch;
         source.Play();
         onStarted?.Invoke();
 
@@ -214,10 +234,25 @@ public class OpenRouterTTS : MonoBehaviour
 
         if (text.Length > maxChars)
         {
-            int cut = text.LastIndexOfAny(new[] { '.', '!', '?' }, maxChars - 1);
+            int cut = text.LastIndexOfAny(new[] { '.', '!', '?', '。', '！', '？' }, maxChars - 1);
             text = cut > maxChars / 3 ? text.Substring(0, cut + 1) : text.Substring(0, maxChars);
         }
         return text;
+    }
+
+    /// <summary>True when at least 30% of the letters are kana/kanji.</summary>
+    public static bool IsMostlyJapanese(string text)
+    {
+        int jp = 0, letters = 0;
+        foreach (char c in text)
+        {
+            bool isJp = (c >= '぀' && c <= 'ヿ')   // hiragana + katakana
+                     || (c >= '一' && c <= '鿿')   // CJK ideographs
+                     || (c >= 'ｦ' && c <= 'ﾟ');  // half-width katakana
+            if (isJp) { jp++; letters++; }
+            else if (char.IsLetter(c)) letters++;
+        }
+        return letters > 0 && jp >= letters * 0.3f;
     }
 
     static int ParseRate(string contentType, int fallback)
@@ -239,5 +274,26 @@ public class OpenRouterTTS : MonoBehaviour
         return clip;
     }
 
-    [Serializable] class SpeechRequest { public string model; public string input; public string voice; public string response_format; public float speed; }
+    static string Show(string v) => string.IsNullOrWhiteSpace(v) ? "(default)" : v;
+
+    static string Json(string s)
+    {
+        var sb = new StringBuilder("\"");
+        foreach (char c in s)
+        {
+            switch (c)
+            {
+                case '"': sb.Append("\\\""); break;
+                case '\\': sb.Append("\\\\"); break;
+                case '\n': sb.Append("\\n"); break;
+                case '\r': sb.Append("\\r"); break;
+                case '\t': sb.Append("\\t"); break;
+                default:
+                    if (c < 0x20) sb.Append("\\u").Append(((int)c).ToString("x4"));
+                    else sb.Append(c);
+                    break;
+            }
+        }
+        return sb.Append('"').ToString();
+    }
 }

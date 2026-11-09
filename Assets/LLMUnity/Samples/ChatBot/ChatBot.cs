@@ -300,7 +300,7 @@ namespace LLMUnitySamples
 
         void ChatWithOpenRouter(string message, Bubble aiBubble)
         {
-            string systemPrompt = llmCharacter != null ? llmCharacter.prompt : null;
+            string systemPrompt = OpenRouterChat.Instance.BuildSystemPrompt(llmCharacter != null ? llmCharacter.prompt : null);
 
             OpenRouterChat.Instance.Chat(
                 message,
