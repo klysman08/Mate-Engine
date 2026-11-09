@@ -124,7 +124,8 @@ namespace LLMUnitySamples
             inputBubble.setInteractable(false);
 
             ShowLoadedMessages();
-            _ = llmCharacter.Warmup(WarmUpCallback);
+            if (UseOpenRouter) WarmUpCallback(); // MateSusu: remote model, nothing to warm up locally
+            else _ = llmCharacter.Warmup(WarmUpCallback);
             FindAvatarSmart();
         }
 
@@ -267,6 +268,13 @@ namespace LLMUnitySamples
                 streamAudioSource.Play();
             if (avatarAnimator != null) avatarAnimator.SetBool(isTalkingHash, true);
 
+            if (UseOpenRouter)
+            {
+                ChatWithOpenRouter(message, aiBubble);
+                inputBubble.SetText("");
+                return;
+            }
+
             Task chatTask = llmCharacter.Chat(
                 message,
                 (partial) => { aiBubble.SetText(partial); layoutDirty = true; },
@@ -284,6 +292,46 @@ namespace LLMUnitySamples
                 }
             );
             inputBubble.SetText("");
+        }
+
+        // ---------- MateSusu: OpenRouter backend ----------
+
+        bool UseOpenRouter => OpenRouterChat.Instance != null && OpenRouterChat.Instance.IsActive;
+
+        void ChatWithOpenRouter(string message, Bubble aiBubble)
+        {
+            string systemPrompt = llmCharacter != null ? llmCharacter.prompt : null;
+
+            OpenRouterChat.Instance.Chat(
+                message,
+                systemPrompt,
+                partial => { aiBubble.SetText(partial); layoutDirty = true; },
+                reply =>
+                {
+                    aiBubble.SetText(reply);
+                    layoutDirty = true;
+                    if (streamAudioSource != null && streamAudioSource.isPlaying)
+                        StartCoroutine(FadeOutStreamAudio());
+
+                    var tts = OpenRouterTTS.Instance;
+                    if (tts != null && tts.speakReplies)
+                    {
+                        // keep the talking animation while the voice plays
+                        tts.Speak(reply, null, () => { if (avatarAnimator != null) avatarAnimator.SetBool(isTalkingHash, false); });
+                    }
+                    else if (avatarAnimator != null) avatarAnimator.SetBool(isTalkingHash, false);
+
+                    AllowInput();
+                },
+                error =>
+                {
+                    aiBubble.SetText("[OpenRouter] " + error);
+                    layoutDirty = true;
+                    if (avatarAnimator != null) avatarAnimator.SetBool(isTalkingHash, false);
+                    if (streamAudioSource != null && streamAudioSource.isPlaying)
+                        StartCoroutine(FadeOutStreamAudio());
+                    AllowInput();
+                });
         }
 
         private IEnumerator FadeOutStreamAudio(float duration = 0.5f)
@@ -315,6 +363,8 @@ namespace LLMUnitySamples
 
         public void CancelRequests()
         {
+            if (OpenRouterChat.Instance != null) OpenRouterChat.Instance.Cancel();
+            if (OpenRouterTTS.Instance != null) OpenRouterTTS.Instance.Stop();
             llmCharacter.CancelRequests();
             AllowInput();
         }
