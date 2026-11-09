@@ -56,9 +56,20 @@ public class OpenRouterChat : MonoBehaviour
         var persona = Resources.Load<TextAsset>(personaResource);
         string basePrompt = persona != null ? persona.text.Trim() : fallbackPrompt;
         string rule = LanguageRule(language);
-        if (string.IsNullOrWhiteSpace(basePrompt)) return rule;
-        return basePrompt + "\n\nLanguage:\n- " + rule;
+        string prompt = string.IsNullOrWhiteSpace(basePrompt) ? rule : basePrompt + "\n\nLanguage:\n- " + rule;
+        var tts = OpenRouterTTS.Instance;
+        if (tts != null && tts.speakReplies && tts.UsesAudioTags) prompt += "\n\n" + VoiceRule;
+        return prompt;
     }
+
+    // ElevenLabs v4 acts out English [tags] inside the text; the chat bubble hides them.
+    const string VoiceRule =
+        "Voice:\n" +
+        "- Your replies are spoken aloud by an expressive voice actor. To sound natural, you may put a short English " +
+        "audio tag in square brackets right before a phrase, for example [giggles], [softly], [whispers], [sighs], " +
+        "[excited], [curious], [pouting], [shy], [happy gasp].\n" +
+        "- Use at most two tags per reply, only when they fit the feeling, and use … or commas for small pauses and breaths.\n" +
+        "- Never use square brackets for anything else.";
 
     static string LanguageRule(string lang)
     {

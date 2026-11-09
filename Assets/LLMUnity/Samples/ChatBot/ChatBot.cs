@@ -305,10 +305,10 @@ namespace LLMUnitySamples
             OpenRouterChat.Instance.Chat(
                 message,
                 systemPrompt,
-                partial => { aiBubble.SetText(partial); layoutDirty = true; },
+                partial => { aiBubble.SetText(OpenRouterTTS.StripAudioTags(partial)); layoutDirty = true; },
                 reply =>
                 {
-                    aiBubble.SetText(reply);
+                    aiBubble.SetText(OpenRouterTTS.StripAudioTags(reply));
                     layoutDirty = true;
                     if (streamAudioSource != null && streamAudioSource.isPlaying)
                         StartCoroutine(FadeOutStreamAudio());

@@ -9,13 +9,20 @@ using UniVRM10;
 using VRM;
 
 /// <summary>
-/// Text-to-speech through OpenRouter's /audio/speech endpoint (default: fish-audio/drama-3),
-/// played as 16-bit PCM with simple amplitude-based lip sync on the current VRM avatar.
+/// Susu's voice. Speech comes from ElevenLabs (same voice as the pre-recorded lines, default when
+/// ELEVENLABS_API_KEY is set) or OpenRouter's /audio/speech endpoint (fish-audio/drama-3), chosen with
+/// SUSU_TTS_PROVIDER. Played as 16-bit PCM with simple amplitude-based lip sync on the current VRM avatar.
 /// </summary>
 [DefaultExecutionOrder(1000)] // after UniversalBlendshapes / animator writes, before VRM10 applies expressions
 public class OpenRouterTTS : MonoBehaviour
 {
+    public enum Provider { OpenRouter, ElevenLabs }
+
     public const string Endpoint = "https://openrouter.ai/api/v1/audio/speech";
+    public const string ElevenLabsEndpoint = "https://api.elevenlabs.io/v1/text-to-speech/";
+    public const string DefaultElevenVoice = "fUjY9K2nAIwlALOwSiwc"; // Yui (ElevenLabs voice library)
+    public const string DefaultElevenModel = "eleven_v4";
+    const int ElevenSampleRate = 24000; // pcm_24000 works on every plan
     public const string DefaultModel = "fish-audio/drama-3";
     // Fish Audio: voice = a Fish "reference_id" (empty = provider default voice), delivery via [bracket] directions.
     // Kokoro (hexgrad/kokoro-82m) also works: voices af_heart / jf_alpha etc.
@@ -28,6 +35,19 @@ public class OpenRouterTTS : MonoBehaviour
 
     [Header("Config (filled from .env at startup)")]
     public bool speakReplies = true;
+    [Tooltip("SUSU_TTS_PROVIDER = elevenlabs | openrouter (default: elevenlabs when ELEVENLABS_API_KEY is set).")]
+    public Provider provider = Provider.OpenRouter;
+
+    [Header("ElevenLabs")]
+    public string elevenVoiceId = DefaultElevenVoice;
+    [Tooltip("ELEVENLABS_CHAT_MODEL. eleven_v4 = best quality; eleven_v4_turbo = faster replies.")]
+    public string elevenModel = DefaultElevenModel;
+    [Tooltip("Lower = more expressive, higher = steadier delivery.")]
+    [Range(0f, 1f)] public float elevenStability = 0.45f;
+    [Tooltip("How closely the output sticks to the reference voice.")]
+    [Range(0f, 1f)] public float elevenSimilarity = 0.8f;
+
+    [Header("OpenRouter")]
     public string model = DefaultModel;
     [Tooltip("Voice used for English replies.")]
     public string voiceEn = DefaultVoiceEn;
@@ -51,6 +71,7 @@ public class OpenRouterTTS : MonoBehaviour
     public bool IsSpeaking => source != null && source.isPlaying;
 
     string apiKey;
+    string elevenKey;
     AudioSource source;
     UnityWebRequest current;
     readonly float[] window = new float[256];
@@ -80,12 +101,36 @@ public class OpenRouterTTS : MonoBehaviour
         volume = MateSusuEnv.GetFloat("OPENROUTER_TTS_VOLUME", volume);
         if (PlayerPrefs.HasKey(VolumePref)) volume = Mathf.Clamp01(PlayerPrefs.GetFloat(VolumePref));
 
+        elevenKey = MateSusuEnv.Get("ELEVENLABS_API_KEY");
+        elevenVoiceId = MateSusuEnv.Get("ELEVENLABS_VOICE_ID", elevenVoiceId).Trim();
+        elevenModel = MateSusuEnv.GetFirst("ELEVENLABS_CHAT_MODEL", "ELEVENLABS_MODEL") ?? elevenModel;
+        elevenStability = Mathf.Clamp01(MateSusuEnv.GetFloat("ELEVENLABS_STABILITY", elevenStability));
+        elevenSimilarity = Mathf.Clamp01(MateSusuEnv.GetFloat("ELEVENLABS_SIMILARITY", elevenSimilarity));
+
+        bool hasEleven = !string.IsNullOrEmpty(elevenKey);
+        string wanted = MateSusuEnv.Get("SUSU_TTS_PROVIDER", hasEleven ? "elevenlabs" : "openrouter").Trim().ToLowerInvariant();
+        provider = wanted == "elevenlabs" || wanted == "eleven" ? Provider.ElevenLabs : Provider.OpenRouter;
+        if (provider == Provider.ElevenLabs && !hasEleven)
+        {
+            Debug.LogWarning("[SusuTTS] SUSU_TTS_PROVIDER is elevenlabs but ELEVENLABS_API_KEY is missing; using OpenRouter.");
+            provider = Provider.OpenRouter;
+        }
+
         source = gameObject.AddComponent<AudioSource>();
         source.playOnAwake = false;
         source.spatialBlend = 0f;
 
-        Debug.Log($"[OpenRouter] TTS {(speakReplies ? "enabled" : "disabled")} - model '{model}', voices en='{Show(voiceEn)}' ja='{Show(voiceJa)}', direction '{instructions}', pitch {pitch}");
+        if (provider == Provider.ElevenLabs)
+            Debug.Log($"[SusuTTS] {(speakReplies ? "enabled" : "disabled")} - ElevenLabs model '{elevenModel}', voice '{elevenVoiceId}', stability {elevenStability}, similarity {elevenSimilarity}");
+        else
+            Debug.Log($"[SusuTTS] {(speakReplies ? "enabled" : "disabled")} - OpenRouter model '{model}', voices en='{Show(voiceEn)}' ja='{Show(voiceJa)}', direction '{instructions}', pitch {pitch}");
     }
+
+    /// <summary>True when the voice acts out [giggles]/[whispers]-style tags in the text (ElevenLabs v3/v4).</summary>
+    public bool UsesAudioTags => provider == Provider.ElevenLabs;
+
+    // ElevenLabs output already has the voice's natural pitch; the pitch setting is for OpenRouter voices.
+    float PlaybackPitch => provider == Provider.ElevenLabs ? 1f : pitch;
 
     void OnDestroy()
     {
@@ -99,7 +144,7 @@ public class OpenRouterTTS : MonoBehaviour
         if (source != null) source.Stop();
     }
 
-    public bool HasApiKey => !string.IsNullOrEmpty(apiKey);
+    public bool HasApiKey => !string.IsNullOrEmpty(provider == Provider.ElevenLabs ? elevenKey : apiKey);
 
     const string VolumePref = "MateSusu.VoiceVolume";
 
@@ -122,25 +167,53 @@ public class OpenRouterTTS : MonoBehaviour
         text = CleanForSpeech(text);
         if (text.Length == 0) return;
         Stop();
-        string voice = IsMostlyJapanese(text) ? voiceJa : voiceEn;
-        StartCoroutine(SynthesizeRoutine(text, voice, instructions,
+        Synthesize(text, IsMostlyJapanese(text), null,
             (pcm, rate) => PlayClip(PcmToClip(pcm, rate), onStarted, onFinished, true),
-            null));
+            null);
     }
 
     /// <summary>
     /// Generates speech and returns raw 16-bit mono PCM (little endian) and its sample rate.
-    /// extraDirection is appended to the configured delivery instructions.
+    /// extraDirection is appended to the configured delivery instructions (OpenRouter only; ElevenLabs
+    /// takes its acting from [tags] inside the text).
     /// </summary>
     public void Synthesize(string text, bool japanese, string extraDirection, Action<byte[], int> onDone, Action<string> onError)
     {
-        if (!HasApiKey) { onError?.Invoke("No OpenRouter API key in .env"); return; }
+        if (!HasApiKey) { onError?.Invoke($"No {provider} API key in .env"); return; }
+        if (provider == Provider.ElevenLabs)
+        {
+            StartCoroutine(SendRoutine(BuildElevenLabsRequest(text, japanese ? "ja" : "en"), ElevenSampleRate, "ElevenLabs", onDone, onError));
+            return;
+        }
         string direction = string.Join(", ", new[] { instructions, extraDirection }
             .Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()));
-        StartCoroutine(SynthesizeRoutine(text, japanese ? voiceJa : voiceEn, direction, onDone, onError));
+        StartCoroutine(SendRoutine(BuildOpenRouterRequest(text, japanese ? voiceJa : voiceEn, direction), PcmSampleRate, "OpenRouter", onDone, onError));
     }
 
-    IEnumerator SynthesizeRoutine(string text, string voice, string direction, Action<byte[], int> onDone, Action<string> onError)
+    UnityWebRequest BuildElevenLabsRequest(string text, string languageCode)
+    {
+        var ci = System.Globalization.CultureInfo.InvariantCulture;
+        var json = new StringBuilder("{");
+        json.Append("\"text\":").Append(Json(text));
+        json.Append(",\"model_id\":").Append(Json(elevenModel));
+        json.Append(",\"language_code\":").Append(Json(languageCode));
+        json.Append(",\"voice_settings\":{\"stability\":").Append(elevenStability.ToString("0.###", ci))
+            .Append(",\"similarity_boost\":").Append(elevenSimilarity.ToString("0.###", ci)).Append('}');
+        json.Append('}');
+
+        string url = ElevenLabsEndpoint + UnityWebRequest.EscapeURL(elevenVoiceId) + "?output_format=pcm_" + ElevenSampleRate;
+        var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST)
+        {
+            uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json.ToString())),
+            downloadHandler = new DownloadHandlerBuffer(),
+            timeout = 60
+        };
+        req.SetRequestHeader("Content-Type", "application/json");
+        req.SetRequestHeader("xi-api-key", elevenKey);
+        return req;
+    }
+
+    UnityWebRequest BuildOpenRouterRequest(string text, string voice, string direction)
     {
         // Built by hand so optional fields are omitted instead of sent empty.
         var json = new StringBuilder("{");
@@ -163,25 +236,29 @@ public class OpenRouterTTS : MonoBehaviour
         req.SetRequestHeader("Authorization", "Bearer " + apiKey);
         req.SetRequestHeader("HTTP-Referer", "https://github.com/klysman08/Mate-Engine");
         req.SetRequestHeader("X-Title", "MateSusu");
+        return req;
+    }
 
+    IEnumerator SendRoutine(UnityWebRequest req, int defaultRate, string label, Action<byte[], int> onDone, Action<string> onError)
+    {
         current = req;
         yield return req.SendWebRequest();
         bool aborted = current != req;
         if (!aborted) current = null;
 
         byte[] pcm = null;
-        int rate = PcmSampleRate;
+        int rate = defaultRate;
         try
         {
             if (aborted) yield break;
             if (req.result != UnityWebRequest.Result.Success)
             {
                 string err = $"TTS failed ({req.responseCode}): {req.downloadHandler.text}";
-                Debug.LogWarning("[OpenRouter] " + err);
+                Debug.LogWarning($"[{label}] " + err);
                 onError?.Invoke(err);
                 yield break;
             }
-            rate = ParseRate(req.GetResponseHeader("Content-Type") ?? "", PcmSampleRate);
+            rate = ParseRate(req.GetResponseHeader("Content-Type") ?? "", defaultRate);
             pcm = req.downloadHandler.data;
         }
         finally
@@ -194,18 +271,19 @@ public class OpenRouterTTS : MonoBehaviour
     }
 
     /// <summary>Plays a clip through Susu's voice source with lip sync and the talking animation.</summary>
-    public void PlayClip(AudioClip clip, Action onStarted = null, Action onFinished = null, bool destroyWhenDone = false)
+    /// <param name="pitchOverride">&gt; 0 plays at this pitch instead of the TTS pitch setting (e.g. 1 for pre-recorded voices).</param>
+    public void PlayClip(AudioClip clip, Action onStarted = null, Action onFinished = null, bool destroyWhenDone = false, float pitchOverride = 0f)
     {
         if (clip == null) return;
         if (source.isPlaying) source.Stop();
-        StartCoroutine(PlayRoutine(clip, onStarted, onFinished, destroyWhenDone));
+        StartCoroutine(PlayRoutine(clip, onStarted, onFinished, destroyWhenDone, pitchOverride > 0f ? pitchOverride : PlaybackPitch));
     }
 
-    IEnumerator PlayRoutine(AudioClip clip, Action onStarted, Action onFinished, bool destroyWhenDone)
+    IEnumerator PlayRoutine(AudioClip clip, Action onStarted, Action onFinished, bool destroyWhenDone, float playPitch)
     {
         source.clip = clip;
         source.volume = volume;
-        source.pitch = pitch;
+        source.pitch = playPitch;
         source.Play();
         SetTalking(true);
         onStarted?.Invoke();
@@ -286,6 +364,12 @@ public class OpenRouterTTS : MonoBehaviour
     static readonly Regex MdLink = new Regex(@"\[([^\]]*)\]\([^)]*\)", RegexOptions.Compiled);
     static readonly Regex Emoji = new Regex(@"[\uD800-\uDBFF][\uDC00-\uDFFF]|[☀-➿]", RegexOptions.Compiled);
     static readonly Regex Spaces = new Regex(@"\s+", RegexOptions.Compiled);
+    // [giggles], [softly], [happy gasp]... (not markdown links) and a tag still being streamed at the end.
+    static readonly Regex AudioTag = new Regex(@"\[[A-Za-z][A-Za-z ,'\-]{0,40}\](?!\()\s*|\[[A-Za-z][A-Za-z ,'\-]{0,40}$", RegexOptions.Compiled);
+
+    /// <summary>Removes [audio tags] for display (chat bubble); the voice still acts them out.</summary>
+    public static string StripAudioTags(string text) =>
+        string.IsNullOrEmpty(text) ? text : AudioTag.Replace(text, "").Trim();
 
     string CleanForSpeech(string text)
     {

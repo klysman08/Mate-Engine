@@ -5,8 +5,10 @@ using UnityEngine;
 
 /// <summary>
 /// Pre-defined phrases Susu can say. Audio is read from local WAV files so playing a phrase costs nothing:
-///   1. StreamingAssets/MateSusu/Voices/&lt;lang&gt;/&lt;id&gt;.wav   (shipped, see Tools/MateSusu/generate_voice_lines.py)
-///   2. persistentDataPath/MateSusu/VoiceCache/&lt;lang&gt;/&lt;id&gt;.wav (generated once via OpenRouter, then reused)
+///   1. StreamingAssets/MateSusu/Voices/&lt;pack&gt;/&lt;id&gt;.wav   (shipped)
+///   2. persistentDataPath/MateSusu/VoiceCache/&lt;pack&gt;/&lt;id&gt;.wav (generated once via OpenRouter, then reused)
+/// Packs: "ja_elevenlabs" (default; ElevenLabs Eleven v4, Tools/MateSusu/generate_voice_lines_elevenlabs.py)
+///        "ja" (older OpenRouter lines, Tools/MateSusu/generate_voice_lines.py). Choose with SUSU_VOICE_PACK in .env.
 /// </summary>
 public class SusuVoiceLines : MonoBehaviour
 {
@@ -18,7 +20,8 @@ public class SusuVoiceLines : MonoBehaviour
         public string id;
         public string label;     // shown on the menu button
         public string text;      // what Susu says
-        public string direction; // extra acting direction used when generating
+        public string direction; // extra acting direction used when generating (OpenRouter packs)
+        public string voiceText; // text with ElevenLabs v4 audio tags, used only by the offline generator
         public string category;  // section title in the Voices window
         public string motion;    // body motion(s) while speaking, names from SusuMotionLibrary: "cheer" or "drink,nod"
         public string hours;     // auto-talk window, 24h: "5-11", "22-4", "13-15,22-4" (empty = any time)
@@ -38,10 +41,24 @@ public class SusuVoiceLines : MonoBehaviour
     }
 
 #pragma warning disable 0649 // filled by JsonUtility
-    [Serializable] class PhraseFile { public string language; public Phrase[] phrases; }
+    [Serializable] class PhraseFile
+    {
+        public string language;
+        public string generator;     // "elevenlabs" = pre-recorded only: never fill gaps with another TTS voice
+        public float playbackPitch;  // > 0 = play at this pitch instead of the TTS pitch setting
+        public Phrase[] phrases;
+    }
 #pragma warning restore 0649
 
+    public const string DefaultPack = "ja_elevenlabs";
+    const string FallbackPack = "ja";
+
     public string language = "ja";
+    [Tooltip("Folder under StreamingAssets/MateSusu/Voices. Overridden by SUSU_VOICE_PACK in .env.")]
+    public string voicePack = DefaultPack;
+
+    bool preRecordedOnly;
+    float playbackPitch;
 
     public IReadOnlyList<Phrase> Phrases => phrases;
     public event Action<Phrase> PhraseStarted;
@@ -51,13 +68,21 @@ public class SusuVoiceLines : MonoBehaviour
     readonly Dictionary<string, AudioClip> loaded = new Dictionary<string, AudioClip>();
     readonly HashSet<string> generating = new HashSet<string>();
 
-    string ShippedFolder => Path.Combine(Application.streamingAssetsPath, "MateSusu", "Voices", language);
-    string CacheFolder => Path.Combine(Application.persistentDataPath, "MateSusu", "VoiceCache", language);
+    string ShippedFolder => PackFolder(voicePack);
+    string CacheFolder => Path.Combine(Application.persistentDataPath, "MateSusu", "VoiceCache", voicePack);
+
+    static string PackFolder(string pack) => Path.Combine(Application.streamingAssetsPath, "MateSusu", "Voices", pack);
 
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
+        voicePack = MateSusuEnv.Get("SUSU_VOICE_PACK", voicePack).Trim();
+        if (!File.Exists(Path.Combine(PackFolder(voicePack), "phrases.json")))
+        {
+            Debug.LogWarning($"[SusuVoice] Voice pack '{voicePack}' not found, using '{FallbackPack}'.");
+            voicePack = FallbackPack;
+        }
         Load();
     }
 
@@ -77,7 +102,10 @@ public class SusuVoiceLines : MonoBehaviour
             if (!File.Exists(path)) { Debug.LogWarning("[SusuVoice] Missing " + path); return; }
             var file = JsonUtility.FromJson<PhraseFile>(File.ReadAllText(path));
             if (file?.phrases != null) phrases.AddRange(file.phrases);
-            Debug.Log($"[SusuVoice] {phrases.Count} '{language}' phrases loaded");
+            if (!string.IsNullOrEmpty(file?.language)) language = file.language;
+            preRecordedOnly = string.Equals(file?.generator, "elevenlabs", StringComparison.OrdinalIgnoreCase);
+            playbackPitch = file != null ? file.playbackPitch : 0f;
+            Debug.Log($"[SusuVoice] {phrases.Count} '{language}' phrases loaded from pack '{voicePack}'");
         }
         catch (Exception e)
         {
@@ -102,10 +130,15 @@ public class SusuVoiceLines : MonoBehaviour
         var clip = GetLocalClip(p);
         if (clip != null)
         {
-            tts.PlayClip(clip, () => PhraseStarted?.Invoke(p), () => PhraseFinished?.Invoke(p));
+            tts.PlayClip(clip, () => PhraseStarted?.Invoke(p), () => PhraseFinished?.Invoke(p), false, playbackPitch);
             return;
         }
 
+        if (preRecordedOnly)
+        {
+            Debug.LogWarning($"[SusuVoice] No recording for '{p.id}' in pack '{voicePack}'. Run Tools/MateSusu/generate_voice_lines_elevenlabs.py.");
+            return;
+        }
         if (!tts.HasApiKey) { Debug.LogWarning($"[SusuVoice] No audio for '{p.id}' and no API key to generate it."); return; }
         if (!generating.Add(p.id)) return; // already on its way
 
