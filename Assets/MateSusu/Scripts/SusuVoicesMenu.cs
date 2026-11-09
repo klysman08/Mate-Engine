@@ -27,6 +27,7 @@ public class SusuVoicesMenu : MonoBehaviour
     const float ButtonWidth = 280f, ButtonHeight = 58f, ColumnX = 150f, RowSpacing = 14f, TopPadding = 24f;
     // Auto-talk controls block above the grid
     const float ControlsHeight = 250f, SliderWidth = 520f;
+    const float SectionHeight = 44f;
 
     TMP_Text frequencyLabel, volumeLabel;
 
@@ -201,26 +202,41 @@ public class SusuVoicesMenu : MonoBehaviour
         }
         else Debug.LogWarning("[SusuVoice] Toggle/slider templates not found - auto-talk controls skipped.");
 
+        // Phrase buttons, two columns, with a section title whenever the category changes.
         var phrases = SusuVoiceLines.Instance.Phrases;
-        int rows = Mathf.CeilToInt(phrases.Count / 2f);
-        content.sizeDelta = new Vector2(content.sizeDelta.x, gridTop + TopPadding + rows * (ButtonHeight + RowSpacing));
-
-        for (int i = 0; i < phrases.Count; i++)
+        float contentWidth = content.rect.width > 100f ? content.rect.width : 633f;
+        float y = gridTop;
+        int col = 0;
+        string lastCategory = null;
+        foreach (var p in phrases)
         {
-            var p = phrases[i];
-            int row = i / 2, col = i % 2;
+            string category = p.category ?? "";
+            if (category != lastCategory)
+            {
+                if (col != 0) { y += ButtonHeight + RowSpacing; col = 0; }
+                if (category.Length > 0 && title != null)
+                {
+                    AddSectionTitle(title, content, category.ToUpperInvariant(), y, contentWidth);
+                    y += SectionHeight;
+                }
+                lastCategory = category;
+            }
+
             var btn = (RectTransform)Instantiate(buttonTemplate.gameObject, content).transform;
             btn.name = "Voice " + p.id;
             btn.anchorMin = btn.anchorMax = new Vector2(0.5f, 1f);
             btn.pivot = new Vector2(0.5f, 0.5f);
             btn.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
-            btn.anchoredPosition = new Vector2(col == 0 ? -ColumnX : ColumnX,
-                -(gridTop + row * (ButtonHeight + RowSpacing) + ButtonHeight * 0.5f));
+            btn.anchoredPosition = new Vector2(col == 0 ? -ColumnX : ColumnX, -(y + ButtonHeight * 0.5f));
 
             var phrase = p;
             var label = Rebind(btn, p.label, () => SusuVoiceLines.Instance?.Play(phrase));
             if (label != null) labels[p.id] = label;
+
+            if (++col == 2) { col = 0; y += ButtonHeight + RowSpacing; }
         }
+        if (col != 0) y += ButtonHeight + RowSpacing;
+        content.sizeDelta = new Vector2(content.sizeDelta.x, y + TopPadding);
 
         foreach (var ma in Resources.FindObjectsOfTypeAll<MenuActions>())
         {
@@ -230,6 +246,22 @@ public class SusuVoicesMenu : MonoBehaviour
 
         Debug.Log($"[SusuVoice] Voices window ready ({phrases.Count} phrases).");
         return true;
+    }
+
+    static void AddSectionTitle(TMP_Text titleTemplate, RectTransform content, string text, float y, float contentWidth)
+    {
+        var go = Instantiate(titleTemplate.gameObject, content);
+        go.name = "Section " + text;
+        var rect = (RectTransform)go.transform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(ColumnX * 2f + ButtonWidth, SectionHeight - 8f);
+        rect.anchoredPosition = new Vector2(0f, -(y + SectionHeight * 0.5f));
+        var t = go.GetComponent<TMP_Text>();
+        t.text = "= " + text;
+        t.enableAutoSizing = false;
+        t.fontSize = 22f;
+        t.alignment = TextAlignmentOptions.Left;
     }
 
     // ---------- Auto-talk controls ----------
