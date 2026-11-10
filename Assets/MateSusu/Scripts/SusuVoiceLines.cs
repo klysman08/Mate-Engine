@@ -22,6 +22,11 @@ public class SusuVoiceLines : MonoBehaviour
         public string text;      // what Susu says
         public string direction; // extra acting direction used when generating (OpenRouter packs)
         public string voiceText; // text with ElevenLabs v4 audio tags, used only by the offline generator
+        public string learn;     // Japanese deck: the expression being taught (e.g. いただきます)
+        public string romaji;    // Japanese deck: its reading
+        public string meaning;   // Japanese deck: what it means / when to use it
+
+        public bool IsLesson => !string.IsNullOrEmpty(learn);
         public string category;  // section title in the Voices window
         public string motion;    // body motion(s) while speaking, names from SusuMotionLibrary: "cheer" or "drink,nod"
         public string hours;     // auto-talk window, 24h: "5-11", "22-4", "13-15,22-4" (empty = any time)

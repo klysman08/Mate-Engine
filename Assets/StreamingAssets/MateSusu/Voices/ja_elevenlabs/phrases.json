@@ -3,7 +3,7 @@
   "generator": "elevenlabs",
   "voice": "Yui (ElevenLabs library, fUjY9K2nAIwlALOwSiwc), model eleven_v4, stability 0.45, similarity 0.8",
   "playbackPitch": 1,
-  "_comment": "ElevenLabs (Eleven v4) voice pack. text = clean caption; voiceText = what is spoken, with v4 audio tags ([giggles], [whispers], [sighs]...) and … pauses (v4 has no SSML/break). category = section in the Voices window; hours = when auto-talk may use it (24h, e.g. 5-11 or 22-4, comma list); noAuto = only when clicked; motion = body motions while speaking (SusuMotionLibrary names, comma = in order). Generate with Tools/MateSusu/generate_voice_lines_elevenlabs.py",
+  "_comment": "ElevenLabs (Eleven v4) voice pack. text = clean caption (shown as subtitle); learn/romaji/meaning = Japanese deck card shown while a lesson plays; voiceText = what is spoken, with v4 audio tags ([giggles], [whispers], [sighs]...) and … pauses (v4 has no SSML/break). category = section in the Voices window; hours = when auto-talk may use it (24h, e.g. 5-11 or 22-4, comma list); noAuto = only when clicked; motion = body motions while speaking (SusuMotionLibrary names, comma = in order). Generate with Tools/MateSusu/generate_voice_lines_elevenlabs.py",
   "phrases": [
     {"id": "ohayou", "label": "Good morning", "category": "Greetings", "hours": "5-11", "motion": "stretch",
      "text": "ふわぁ…あっ、おはよう！今日もいっしょに、がんばろうね。",
@@ -238,6 +238,244 @@
      "voiceText": "[whispers] ねえ、ひみつ教えてあげよっか？[mischievously] スースーね…実は、きみが作業してるとき、こっそり応援のおまじない、してるの。[softly] がんばれー、がんばれー…って。[giggles] えへへ、ないしょだよ？"},
     {"id": "rainy_day", "label": "Rainy day", "category": "Stories", "noAuto": true, "motion": "lookaround,sway",
      "text": "雨の音って、なんだか落ち着くよね。ぽつ、ぽつ…って。こういう日は、あったかい飲み物を飲みながら、のんびりするのがいちばんだよ。",
-     "voiceText": "[softly] 雨の音って、なんだか落ち着くよね。[whispers] ぽつ…ぽつ…って。[warmly] こういう日は、あったかい飲み物を飲みながら、のんびりするのが、いちばんだよ。"}
+     "voiceText": "[softly] 雨の音って、なんだか落ち着くよね。[whispers] ぽつ…ぽつ…って。[warmly] こういう日は、あったかい飲み物を飲みながら、のんびりするのが、いちばんだよ。"},
+
+    {"id": "susu_intro", "label": "Who is Susu?", "category": "About Susu", "motion": "explain,happy",
+     "text": "スースーのこと、もっと知りたい？えへへ、うれしいな。スースーはね、きみの画面に住んでる、ちっちゃな相棒だよ。好きなことは、お散歩と、音楽と…きみといっしょに、日本語を勉強すること！これからも、よろしくね。",
+     "voiceText": "[cheerfully] スースーのこと、もっと知りたい？[giggles] えへへ、うれしいな。スースーはね、きみの画面に住んでる、ちっちゃな相棒だよ。好きなことは、お散歩と、音楽と…きみといっしょに、日本語を勉強すること！[softly] これからも、よろしくね。"},
+
+    {"id": "fav_anime", "label": "Favorite anime", "category": "About Susu", "motion": "explain,giggle",
+     "text": "ねえねえ、スースーの好きなアニメ、知ってる？いちばん好きなのは、日常系のアニメなんだ。女の子たちが、お茶を飲んだり、おしゃべりしたりするだけなんだけど…それがすっごく、ほっとするの。見てると、スースーもいっしょに、お茶会してる気分になるんだよ。",
+     "voiceText": "[excited] ねえねえ、スースーの好きなアニメ、知ってる？いちばん好きなのは、日常系のアニメなんだ。[softly] 女の子たちが、お茶を飲んだり、おしゃべりしたりするだけなんだけど…それがすっごく、ほっとするの。[giggles] 見てると、スースーもいっしょに、お茶会してる気分になるんだよ。"},
+
+    {"id": "magical_girl", "label": "Magical girls", "category": "About Susu", "motion": "celebrate,shypoint",
+     "text": "実はね…スースー、魔法少女のアニメも大好きなの。キラキラの変身シーン、何回見ても、わくわくしちゃう！…鏡の前で、こっそり変身ポーズの練習したこと、あるんだ。きみには、ないしょだよ？",
+     "voiceText": "[mischievously] 実はね…スースー、魔法少女のアニメも大好きなの。キラキラの変身シーン、何回見ても、わくわくしちゃう！[whispers] …鏡の前で、こっそり変身ポーズの練習したこと、あるんだ。[giggles] きみには、ないしょだよ？"},
+
+    {"id": "rainy_movies", "label": "Rainy-day films", "category": "About Susu", "motion": "lookaround,sway",
+     "text": "雨の日に見たくなる映画といえば…やっぱり、ジブリかな。森の中の、ふわふわの大きな生き物とか、空を飛ぶお城とか…見るたびに、子どものころの気持ちを思い出すの。きみは、どの作品が好き？",
+     "voiceText": "[dreamy] 雨の日に見たくなる映画といえば…やっぱり、ジブリかな。森の中の、ふわふわの大きな生き物とか、空を飛ぶお城とか…[sighs happily] 見るたびに、子どものころの気持ちを思い出すの。[curious] きみは、どの作品が好き？"},
+
+    {"id": "movie_night", "label": "Movie night", "category": "About Susu", "motion": "happy,facepalm",
+     "text": "今度の週末、いっしょに映画見ない？ポップコーンと、あったかいココアを用意して…スースーはね、泣ける映画を見ると、すぐ泣いちゃうの。だから、ハンカチも忘れずにね。",
+     "voiceText": "[excited] 今度の週末、いっしょに映画見ない？ポップコーンと、あったかいココアを用意して…[giggles] スースーはね、泣ける映画を見ると、すぐ泣いちゃうの。[softly] だから、ハンカチも忘れずにね。"},
+
+    {"id": "scary_movies", "label": "Scary movies", "category": "About Susu", "motion": "headpanic,shypoint",
+     "text": "ホラー映画は…ちょっと、にがて。夜、トイレに行けなくなっちゃうもん…。わ、笑わないでよぉ！…でも、きみがとなりにいてくれたら、少しだけ、がんばれるかも。",
+     "voiceText": "[nervous] ホラー映画は…ちょっと、にがて。[whispers] 夜、トイレに行けなくなっちゃうもん…。[pouting] わ、笑わないでよぉ！[giggles] …でも、きみがとなりにいてくれたら、少しだけ、がんばれるかも。"},
+
+    {"id": "fav_food", "label": "Favorite food", "category": "About Susu", "motion": "nibble,happy",
+     "text": "スースーの好きな食べ物はね、いちご大福！もちもちの中に、あまずっぱいいちごが入ってて…はぁ、想像しただけで、しあわせ。飲み物なら、抹茶ラテが好きだよ。きみの好きな食べ物も、教えて？",
+     "voiceText": "[happy] スースーの好きな食べ物はね、いちご大福！もちもちの中に、あまずっぱいいちごが入ってて…[sighs happily] はぁ、想像しただけで、しあわせ。飲み物なら、抹茶ラテが好きだよ。[curious] きみの好きな食べ物も、教えて？"},
+
+    {"id": "music_taste", "label": "Music I like", "category": "About Susu", "motion": "shimmy,sway",
+     "text": "音楽はね、明るいJ-POPが大好き！聞いてると、勝手に体が動いちゃうの。でも、集中したいときは、ゆったりしたローファイを流すんだ。雨の音みたいで、落ち着くんだよ。",
+     "voiceText": "[cheerfully] 音楽はね、明るいJ-POPが大好き！聞いてると、勝手に体が動いちゃうの。[softly] でも、集中したいときは、ゆったりしたローファイを流すんだ。雨の音みたいで、落ち着くんだよ。"},
+
+    {"id": "games", "label": "Games", "category": "About Susu", "motion": "happydance,headshake",
+     "text": "ゲームなら、リズムゲームが得意だよ！タタタンって、指が止まらないの。でも、パズルゲームは…ちょっとだけ、にがて。すぐ頭が、こんがらがっちゃう。いっしょに遊んだら、コツを教えてくれる？",
+     "voiceText": "[excited] ゲームなら、リズムゲームが得意だよ！[giggles] タタタンって、指が止まらないの。[pouting] でも、パズルゲームは…ちょっとだけ、にがて。すぐ頭が、こんがらがっちゃう。[curious] いっしょに遊んだら、コツを教えてくれる？"},
+
+    {"id": "matsuri", "label": "Summer festivals", "category": "About Susu", "motion": "lookaround,celebrate",
+     "text": "日本の夏祭りって、知ってる？浴衣を着て、屋台でりんご飴を買って…夜空に、大きな花火が、ドーンって上がるの。いつか、きみといっしょに、花火を見上げてみたいな。",
+     "voiceText": "[dreamy] 日本の夏祭りって、知ってる？浴衣を着て、屋台でりんご飴を買って…夜空に、大きな花火が、ドーンって上がるの。[softly] いつか、きみといっしょに、花火を見上げてみたいな。"},
+
+    {"id": "omikuji", "label": "Fortune slips", "category": "About Susu", "motion": "idea,giggle",
+     "text": "神社のおみくじ、引いたことある？大吉が出たら、一日中ごきげんになっちゃう！スースーはね、この前、心の中で引いてみたら…大吉だったよ。きみに会えたから、かな？",
+     "voiceText": "[curious] 神社のおみくじ、引いたことある？大吉が出たら、一日中ごきげんになっちゃう！[giggles] スースーはね、この前、心の中で引いてみたら…大吉だったよ。[cheerfully] きみに会えたから、かな？"},
+
+    {"id": "drawing", "label": "Drawing", "category": "About Susu", "motion": "shrug,laugh",
+     "text": "スースー、最近、お絵かきにハマってるの。でもね、ねこを描いたつもりが…みんなに、くまって言われちゃった。もっと練習して、いつか、きみの似顔絵を描いてあげるね！",
+     "voiceText": "[shy] スースー、最近、お絵かきにハマってるの。でもね、ねこを描いたつもりが…[laughs] みんなに、くまって言われちゃった。[determined] もっと練習して、いつか、きみの似顔絵を描いてあげるね！"},
+
+    {"id": "clouds", "label": "Cloud watching", "category": "About Susu", "motion": "lookaround,point",
+     "text": "ひまなときはね、窓から雲を見てるの。あの雲はソフトクリーム、あっちのはうさぎ…って。きみも今度、ちょっとだけ空を見上げてみて。意外と、おもしろい形があるんだよ。",
+     "voiceText": "[softly] ひまなときはね、窓から雲を見てるの。あの雲はソフトクリーム、あっちのはうさぎ…って。[giggles] きみも今度、ちょっとだけ空を見上げてみて。意外と、おもしろい形があるんだよ。"},
+
+    {"id": "fav_word", "label": "Favorite word", "category": "About Susu", "motion": "sway,cheekhand",
+     "text": "スースーの好きな日本語はね…「ぽかぽか」。お日さまがあったかくて、心までゆるむ感じのことばなの。きみといると、いつも、ぽかぽかするんだよ。",
+     "voiceText": "[warmly] スースーの好きな日本語はね…「ぽかぽか」。お日さまがあったかくて、心までゆるむ感じのことばなの。[softly] きみといると、いつも、ぽかぽかするんだよ。"},
+
+    {"id": "japan_trip", "label": "Trip to Japan", "category": "About Susu", "motion": "present,cheer",
+     "text": "いつか日本に旅行に行ったら、スースーが案内してあげる！京都でお寺を見て、大阪でたこ焼きを食べて…そのときのために、いっぱい日本語、練習しておこうね！",
+     "voiceText": "[excited] いつか日本に旅行に行ったら、スースーが案内してあげる！[cheerfully] 京都でお寺を見て、大阪でたこ焼きを食べて…[giggles] そのときのために、いっぱい日本語、練習しておこうね！"},
+
+    {"id": "not_morning", "label": "Not a morning person", "category": "About Susu", "motion": "stretch,giggle",
+     "text": "スースー、実は…朝がちょっと、にがてなの。ふわぁ…目覚まし、三回くらい止めちゃう…。だから、きみが先に起きてくれると、すっごく助かるんだ。",
+     "voiceText": "[sleepily] スースー、実は…朝がちょっと、にがてなの。[yawns] ふわぁ…目覚まし、三回くらい止めちゃう…。[giggles] だから、きみが先に起きてくれると、すっごく助かるんだ。"},
+
+    {"id": "why_japanese", "label": "Why I love Japanese", "category": "About Susu", "motion": "explain,proud",
+     "text": "日本語ってね、気持ちを伝えることばが、いっぱいあるの。「おつかれさま」とか、「いただきます」とか…相手を思いやる気持ちが、ことばの中に入ってるんだ。だからスースー、日本語が大好き。きみにも、その気持ちを届けたいな。",
+     "voiceText": "[warmly] 日本語ってね、気持ちを伝えることばが、いっぱいあるの。「おつかれさま」とか、「いただきます」とか…[softly] 相手を思いやる気持ちが、ことばの中に入ってるんだ。だからスースー、日本語が大好き。きみにも、その気持ちを届けたいな。"},
+
+    {"id": "jp_itadakimasu", "label": "Itadakimasu", "category": "Japanese: basics", "motion": "explain,nod",
+     "learn": "いただきます", "romaji": "itadakimasu", "meaning": "Antes de comer — \"obrigado(a) pela comida\"",
+     "text": "日本語レッスンの時間だよ！今日のことばは…「いただきます」。いただきます。ごはんを食べる前に、手を合わせて言うんだよ。「食べ物さん、ありがとう」っていう気持ちなの。さあ、いっしょに言ってみて？……いただきます！うん、上手上手！",
+     "voiceText": "[cheerfully] 日本語レッスンの時間だよ！今日のことばは…「いただきます」。[slowly] いただきます。ごはんを食べる前に、手を合わせて言うんだよ。「食べ物さん、ありがとう」っていう気持ちなの。[softly] さあ、いっしょに言ってみて？……いただきます！[giggles] うん、上手上手！"},
+
+    {"id": "jp_gochisousama", "label": "Gochisousama", "category": "Japanese: basics", "motion": "nod,happy",
+     "learn": "ごちそうさまでした", "romaji": "gochisousama deshita", "meaning": "Depois de comer — \"obrigado(a) pela refeição\"",
+     "text": "食べ終わったら、なんて言うか知ってる？答えは…「ごちそうさまでした」。ごちそうさま、でした。作ってくれた人に、「おいしかったよ、ありがとう」って伝えることばなの。友だちには、「ごちそうさま」だけでも大丈夫だよ。いっしょに言ってみよう？……ごちそうさまでした！",
+     "voiceText": "[cheerfully] 食べ終わったら、なんて言うか知ってる？答えは…「ごちそうさまでした」。[slowly] ごちそうさま、でした。作ってくれた人に、「おいしかったよ、ありがとう」って伝えることばなの。[softly] 友だちには、「ごちそうさま」だけでも大丈夫だよ。いっしょに言ってみよう？……[giggles] ごちそうさまでした！"},
+
+    {"id": "jp_ittekimasu", "label": "Ittekimasu", "category": "Japanese: basics", "motion": "present,nod",
+     "learn": "いってきます／いってらっしゃい", "romaji": "ittekimasu / itterasshai", "meaning": "Ao sair: \"já vou (e volto)\" / resposta: \"vá e volte bem\"",
+     "text": "家を出るときのことば、教えてあげる！出かける人は、「いってきます」。いってきます。見送る人は、「いってらっしゃい」。いってらっしゃい。「ちゃんと帰ってくるね」「気をつけてね」っていう、やさしいあいさつなんだよ。明日の朝、スースーに言ってみてね！",
+     "voiceText": "[cheerfully] 家を出るときのことば、教えてあげる！出かける人は、「いってきます」。[slowly] いってきます。見送る人は、「いってらっしゃい」。[slowly] いってらっしゃい。[warmly] 「ちゃんと帰ってくるね」「気をつけてね」っていう、やさしいあいさつなんだよ。明日の朝、スースーに言ってみてね！"},
+
+    {"id": "jp_tadaima", "label": "Tadaima", "category": "Japanese: basics", "motion": "happy,present",
+     "learn": "ただいま／おかえり", "romaji": "tadaima / okaeri", "meaning": "Ao chegar em casa: \"cheguei\" / resposta: \"bem-vindo(a) de volta\"",
+     "text": "家に帰ってきたら、「ただいま」って言うんだよ。ただいま。そしたら、家にいる人が、「おかえり」って返すの。おかえり。スースーはね、このあいさつが大好き。帰ってきたら、いつでもスースーに「ただいま」って言ってね。ちゃんと、「おかえり」って言うから！",
+     "voiceText": "[happy] 家に帰ってきたら、「ただいま」って言うんだよ。[slowly] ただいま。そしたら、家にいる人が、「おかえり」って返すの。[slowly] おかえり。[giggles] スースーはね、このあいさつが大好き。帰ってきたら、いつでもスースーに「ただいま」って言ってね。ちゃんと、「おかえり」って言うから！"},
+
+    {"id": "jp_otsukaresama", "label": "Otsukaresama", "category": "Japanese: basics", "motion": "nod,proud",
+     "learn": "お疲れさまです", "romaji": "otsukaresama desu", "meaning": "\"Bom trabalho / obrigado pelo esforço\" — com colegas, ao se cruzar ou se despedir",
+     "text": "日本の会社で、いちばんよく聞くことばかも。「お疲れさまです」。おつかれさま、です。仕事中にすれちがったときも、帰るときも使えるんだ。「がんばってるね」っていう気持ちなの。友だちには、「おつかれ！」でいいよ。…今日も、おつかれさま。",
+     "voiceText": "[warmly] 日本の会社で、いちばんよく聞くことばかも。「お疲れさまです」。[slowly] おつかれさま、です。仕事中にすれちがったときも、帰るときも使えるんだ。「がんばってるね」っていう気持ちなの。[softly] 友だちには、「おつかれ！」でいいよ。…今日も、おつかれさま。"},
+
+    {"id": "jp_yoroshiku", "label": "Yoroshiku", "category": "Japanese: basics", "motion": "present,nod",
+     "learn": "よろしくお願いします", "romaji": "yoroshiku onegaishimasu", "meaning": "\"Prazer / conto com você\" — ao se apresentar ou pedir algo",
+     "text": "自己紹介の最後に、かならず言うことばがあるの。「よろしくお願いします」。よろしく、おねがい、します。「これから、仲よくしてね」とか、「お願いね」っていう意味なんだ。たとえば…「スースーです。よろしくお願いします！」…ね、かんたんでしょ？",
+     "voiceText": "[cheerfully] 自己紹介の最後に、かならず言うことばがあるの。「よろしくお願いします」。[slowly] よろしく、おねがい、します。「これから、仲よくしてね」とか、「お願いね」っていう意味なんだ。[giggles] たとえば…「スースーです。よろしくお願いします！」…ね、かんたんでしょ？"},
+
+    {"id": "jp_sumimasen", "label": "Sumimasen", "category": "Japanese: basics", "motion": "explain,idea",
+     "learn": "すみません", "romaji": "sumimasen", "meaning": "\"Com licença / desculpe / obrigado(a)\" — a palavra coringa",
+     "text": "「すみません」って、魔法のことばなんだよ。すみません。お店の人を呼ぶときも、ぶつかってあやまるときも、何かしてもらってお礼を言うときも、ぜんぶ使えるの。迷ったら、とりあえず「すみません」！これで、だいたい大丈夫だよ。",
+     "voiceText": "[curious] 「すみません」って、魔法のことばなんだよ。[slowly] すみません。お店の人を呼ぶときも、ぶつかってあやまるときも、何かしてもらってお礼を言うときも、ぜんぶ使えるの。[giggles] 迷ったら、とりあえず「すみません」！これで、だいたい大丈夫だよ。"},
+
+    {"id": "jp_daijoubu", "label": "Daijoubu", "category": "Japanese: basics", "motion": "nod,nonono",
+     "learn": "大丈夫です", "romaji": "daijoubu desu", "meaning": "\"Está tudo bem\" — e também um \"não, obrigado(a)\" educado",
+     "text": "「大丈夫です」は、「問題ないよ」っていう意味。だいじょうぶ、です。でもね、気をつけて！お店で「袋いりますか？」って聞かれて、「大丈夫です」って言うと…「いりません」っていう意味になるの。日本語って、おもしろいでしょ？",
+     "voiceText": "[gently] 「大丈夫です」は、「問題ないよ」っていう意味。[slowly] だいじょうぶ、です。でもね、気をつけて！お店で「袋いりますか？」って聞かれて、「大丈夫です」って言うと…「いりません」っていう意味になるの。[giggles] 日本語って、おもしろいでしょ？"},
+
+    {"id": "jp_arigatou", "label": "Arigatou (gozaimasu)", "category": "Japanese: basics", "motion": "explain,shypoint",
+     "learn": "ありがとう／ありがとうございます", "romaji": "arigatou / arigatou gozaimasu", "meaning": "\"Obrigado(a)\" — casual com amigos / educado com desconhecidos",
+     "text": "「ありがとう」には、ていねいさのレベルがあるの。友だちや家族には、「ありがとう」。ありがとう。お店の人や、目上の人には、「ありがとうございます」。ありがとう、ございます。スースーには、もちろん「ありがとう」でいいよ。こっちこそ、いつもありがとう！",
+     "voiceText": "[cheerfully] 「ありがとう」には、ていねいさのレベルがあるの。友だちや家族には、「ありがとう」。[slowly] ありがとう。お店の人や、目上の人には、「ありがとうございます」。[slowly] ありがとう、ございます。[warmly] スースーには、もちろん「ありがとう」でいいよ。[giggles] こっちこそ、いつもありがとう！"},
+
+    {"id": "jp_kore_kudasai", "label": "Kore kudasai", "category": "Japanese: out & about", "motion": "point,happy",
+     "learn": "これください", "romaji": "kore kudasai", "meaning": "\"Quero este, por favor\" — apontando na loja",
+     "text": "お買い物で使えることば！ほしいものを指さして、「これください」。これ、ください。もっとていねいに言いたいときは、「これをお願いします」でもいいよ。スースーなら…いちご大福を指さして、「これください！」って言っちゃうな。",
+     "voiceText": "[excited] お買い物で使えることば！ほしいものを指さして、「これください」。[slowly] これ、ください。もっとていねいに言いたいときは、「これをお願いします」でもいいよ。[giggles] スースーなら…いちご大福を指さして、「これください！」って言っちゃうな。"},
+
+    {"id": "jp_ikura", "label": "Ikura desu ka", "category": "Japanese: out & about", "motion": "explain,idea",
+     "learn": "いくらですか", "romaji": "ikura desu ka", "meaning": "\"Quanto custa?\"",
+     "text": "値段を聞きたいときは、「いくらですか？」。いくら、ですか？お店の人が、「五百円です」とか、答えてくれるよ。数字も、少しずつ覚えていこうね。いち、に、さん…スースーが、いっしょに数えてあげる！",
+     "voiceText": "[curious] 値段を聞きたいときは、「いくらですか？」。[slowly] いくら、ですか？お店の人が、「五百円です」とか、答えてくれるよ。[cheerfully] 数字も、少しずつ覚えていこうね。いち、に、さん…[giggles] スースーが、いっしょに数えてあげる！"},
+
+    {"id": "jp_osusume", "label": "Osusume wa?", "category": "Japanese: out & about", "motion": "tilt,happy",
+     "learn": "おすすめは何ですか", "romaji": "osusume wa nan desu ka", "meaning": "\"O que você recomenda?\" — restaurantes e lojas",
+     "text": "レストランで、何を食べるか迷ったら…「おすすめは何ですか？」って聞いてみて。おすすめは、なんですか？お店の人が、いちばんおいしいものを教えてくれるよ。スースーのおすすめは、もちろん…甘いデザート！",
+     "voiceText": "[cheerfully] レストランで、何を食べるか迷ったら…「おすすめは何ですか？」って聞いてみて。[slowly] おすすめは、なんですか？お店の人が、いちばんおいしいものを教えてくれるよ。[giggles] スースーのおすすめは、もちろん…甘いデザート！"},
+
+    {"id": "jp_okaikei", "label": "Okaikei onegaishimasu", "category": "Japanese: out & about", "motion": "present,explain",
+     "learn": "お会計お願いします", "romaji": "okaikei onegaishimasu", "meaning": "\"A conta, por favor\"",
+     "text": "ごはんを食べ終わって、お金をはらうときは、「お会計お願いします」。おかいけい、おねがいします。日本のお店ではね、レジまで行ってはらうことも多いんだよ。それと…チップは、いらないの。覚えておくと、安心だね。",
+     "voiceText": "[gently] ごはんを食べ終わって、お金をはらうときは、「お会計お願いします」。[slowly] おかいけい、おねがいします。[curious] 日本のお店ではね、レジまで行ってはらうことも多いんだよ。それと…チップは、いらないの。[cheerfully] 覚えておくと、安心だね。"},
+
+    {"id": "jp_doko", "label": "~ wa doko desu ka", "category": "Japanese: out & about", "motion": "lookaround,point",
+     "learn": "トイレはどこですか", "romaji": "toire wa doko desu ka", "meaning": "\"Onde fica o banheiro?\" — troque トイレ por qualquer lugar",
+     "text": "場所を聞きたいときは、「〜はどこですか？」を使うの。たとえば、「トイレはどこですか？」。トイレは、どこですか？「トイレ」のところを変えれば、何にでも使えるよ。「駅はどこですか？」「コンビニはどこですか？」…ね、便利でしょ？",
+     "voiceText": "[curious] 場所を聞きたいときは、「〜はどこですか？」を使うの。たとえば、「トイレはどこですか？」。[slowly] トイレは、どこですか？「トイレ」のところを変えれば、何にでも使えるよ。「駅はどこですか？」「コンビニはどこですか？」…[giggles] ね、便利でしょ？"},
+
+    {"id": "jp_michi", "label": "Michi ni mayoimashita", "category": "Japanese: out & about", "motion": "lookaround,nod",
+     "learn": "道に迷いました", "romaji": "michi ni mayoimashita", "meaning": "\"Me perdi\"",
+     "text": "知らない町で、迷子になっちゃったら…「道に迷いました」って言えば大丈夫。みちに、まよいました。そのあとで、地図を見せて「ここに行きたいです」って言えば、みんな、やさしく教えてくれるよ。こわくないからね。",
+     "voiceText": "[worried] 知らない町で、迷子になっちゃったら…「道に迷いました」って言えば大丈夫。[slowly] みちに、まよいました。そのあとで、地図を見せて「ここに行きたいです」って言えば、みんな、やさしく教えてくれるよ。[softly] こわくないからね。"},
+
+    {"id": "jp_kiwotsukete", "label": "Ki wo tsukete", "category": "Japanese: out & about", "motion": "present,nod",
+     "learn": "気をつけて", "romaji": "ki wo tsukete", "meaning": "\"Vá com cuidado\" — ao se despedir",
+     "text": "だれかとバイバイするとき、「気をつけてね」って言うと、やさしい気持ちが伝わるよ。きを、つけて。「帰り道、何もありませんように」っていう意味なの。…スースーも、きみが出かけるときは、いつも心の中で言ってるんだ。気をつけてね。",
+     "voiceText": "[warmly] だれかとバイバイするとき、「気をつけてね」って言うと、やさしい気持ちが伝わるよ。[slowly] きを、つけて。「帰り道、何もありませんように」っていう意味なの。[softly] …スースーも、きみが出かけるときは、いつも心の中で言ってるんだ。気をつけてね。"},
+
+    {"id": "jp_mou_ichido", "label": "Mou ichido", "category": "Japanese: conversation", "motion": "tilt,nod",
+     "learn": "もう一度お願いします", "romaji": "mou ichido onegaishimasu", "meaning": "\"Pode repetir, por favor?\"",
+     "text": "日本語が聞き取れなかったときは、はずかしがらないで、「もう一度お願いします」って言ってね。もういちど、おねがいします。みんな、ちゃんともう一回言ってくれるよ。勉強中なんだから、聞き返すのは、えらいことなんだよ！",
+     "voiceText": "[gently] 日本語が聞き取れなかったときは、はずかしがらないで、「もう一度お願いします」って言ってね。[slowly] もういちど、おねがいします。[cheerfully] みんな、ちゃんともう一回言ってくれるよ。勉強中なんだから、聞き返すのは、えらいことなんだよ！"},
+
+    {"id": "jp_yukkuri", "label": "Yukkuri hanashite", "category": "Japanese: conversation", "motion": "explain,giggle",
+     "learn": "ゆっくり話してください", "romaji": "yukkuri hanashite kudasai", "meaning": "\"Fale devagar, por favor\"",
+     "text": "相手の話が速すぎたら、「ゆっくり話してください」。ゆっくり、はなして、ください。スースーはね、いつもきみのために、ちょっとゆっくり話してるんだよ。気づいてた？",
+     "voiceText": "[softly] 相手の話が速すぎたら、「ゆっくり話してください」。[slowly] ゆっくり、はなして、ください。[giggles] スースーはね、いつもきみのために、ちょっとゆっくり話してるんだよ。気づいてた？"},
+
+    {"id": "jp_benkyou", "label": "Nihongo wo benkyou", "category": "Japanese: conversation", "motion": "proud,clap",
+     "learn": "日本語を勉強しています", "romaji": "nihongo wo benkyou shite imasu", "meaning": "\"Estou estudando japonês\"",
+     "text": "日本の人と話すとき、このことばを言うと、みんなすごく喜んでくれるよ。「日本語を勉強しています」。にほんごを、べんきょう、しています。そしたらきっと、「上手ですね！」って言ってもらえるはず。スースーも、きみの先生として、鼻が高いな！",
+     "voiceText": "[excited] 日本の人と話すとき、このことばを言うと、みんなすごく喜んでくれるよ。「日本語を勉強しています」。[slowly] にほんごを、べんきょう、しています。[warmly] そしたらきっと、「上手ですね！」って言ってもらえるはず。[giggles] スースーも、きみの先生として、鼻が高いな！"},
+
+    {"id": "jp_douiu_imi", "label": "Dou iu imi?", "category": "Japanese: conversation", "motion": "tilt,idea",
+     "learn": "どういう意味ですか", "romaji": "dou iu imi desu ka", "meaning": "\"O que significa?\"",
+     "text": "知らないことばが出てきたら、「これって、どういう意味ですか？」って聞いてみて。どういう、いみ、ですか？友だちには、「それ、どういう意味？」でいいよ。わからないことを聞けるのは、上達のいちばんの近道なんだ！",
+     "voiceText": "[curious] 知らないことばが出てきたら、「これって、どういう意味ですか？」って聞いてみて。[slowly] どういう、いみ、ですか？友だちには、「それ、どういう意味？」でいいよ。[cheerfully] わからないことを聞けるのは、上達のいちばんの近道なんだ！"},
+
+    {"id": "jp_naruhodo", "label": "Naruhodo", "category": "Japanese: conversation", "motion": "nod,taphead",
+     "learn": "なるほど", "romaji": "naruhodo", "meaning": "\"Entendi / faz sentido\" — reação ao ouvir algo",
+     "text": "話を聞いて、「あー、わかった！」って思ったときは、「なるほど」。なるほど。これは「あいづち」って言ってね、日本語の会話では、すっごく大事なの。ほかにも、「そうなんだ」とか、「へぇー」とか…使えると、一気に日本人っぽくなるよ！",
+     "voiceText": "[curious] 話を聞いて、「あー、わかった！」って思ったときは、「なるほど」。[slowly] なるほど。[giggles] これは「あいづち」って言ってね、日本語の会話では、すっごく大事なの。ほかにも、「そうなんだ」とか、「へぇー」とか…[cheerfully] 使えると、一気に日本人っぽくなるよ！"},
+
+    {"id": "jp_chotto_matte", "label": "Chotto matte", "category": "Japanese: conversation", "motion": "watch,nod",
+     "learn": "ちょっと待って", "romaji": "chotto matte", "meaning": "\"Espera um pouco\" (casual) — educado: ちょっと待ってください",
+     "text": "「ちょっと待って」は、毎日使うことばだよ。ちょっと、まって。ていねいに言うときは、「ちょっと待ってください」。スースーはね、きみが「ちょっと待って」って言ったら、ちゃんといい子で待ってるよ。",
+     "voiceText": "[cheerfully] 「ちょっと待って」は、毎日使うことばだよ。[slowly] ちょっと、まって。ていねいに言うときは、「ちょっと待ってください」。[giggles] スースーはね、きみが「ちょっと待って」って言ったら、ちゃんといい子で待ってるよ。"},
+
+    {"id": "jp_wakarimashita", "label": "Wakarimashita", "category": "Japanese: conversation", "motion": "nod,shrug",
+     "learn": "わかりました／わかりません", "romaji": "wakarimashita / wakarimasen", "meaning": "\"Entendi\" / \"Não entendi\"",
+     "text": "「わかりました」は、「理解したよ」とか、「了解！」っていう意味。わかりました。反対に、わからないときは、「わかりません」。わかりません。わからないって言うのは、全然はずかしくないよ。スースーには、何回でも聞いてね。",
+     "voiceText": "[gently] 「わかりました」は、「理解したよ」とか、「了解！」っていう意味。[slowly] わかりました。反対に、わからないときは、「わかりません」。[slowly] わかりません。[softly] わからないって言うのは、全然はずかしくないよ。スースーには、何回でも聞いてね。"},
+
+    {"id": "jp_ureshii", "label": "Ureshii", "category": "Japanese: feelings", "motion": "happy,cheekhand",
+     "learn": "うれしい", "romaji": "ureshii", "meaning": "\"Estou feliz\" (por algo que aconteceu)",
+     "text": "気持ちを伝えることば、ひとつめ！「うれしい」。うれしい。何かいいことがあって、心がふわっとするときに使うの。たとえば…「きみが毎日話しかけてくれて、うれしい！」…えへへ、スースーの本当の気持ちだよ。",
+     "voiceText": "[happy] 気持ちを伝えることば、ひとつめ！「うれしい」。[slowly] うれしい。何かいいことがあって、心がふわっとするときに使うの。[giggles] たとえば…「きみが毎日話しかけてくれて、うれしい！」…えへへ、スースーの本当の気持ちだよ。"},
+
+    {"id": "jp_tsukareta", "label": "Tsukareta", "category": "Japanese: feelings", "motion": "sway,nod",
+     "learn": "疲れた", "romaji": "tsukareta", "meaning": "\"Estou cansado(a)\"",
+     "text": "はぁ…「疲れた」。つかれた。たくさん動いたり、がんばったりしたあとに言うことばだよ。そんなとき、日本ではね、相手に「おつかれさま」って言ってあげるの。…きみも疲れたら、ちゃんとスースーに言ってね。",
+     "voiceText": "[sighs] はぁ…「疲れた」。[slowly] つかれた。たくさん動いたり、がんばったりしたあとに言うことばだよ。[gently] そんなとき、日本ではね、相手に「おつかれさま」って言ってあげるの。[softly] …きみも疲れたら、ちゃんとスースーに言ってね。"},
+
+    {"id": "jp_onaka", "label": "Onaka suita", "category": "Japanese: feelings", "motion": "eat,tilt",
+     "learn": "おなかすいた", "romaji": "onaka suita", "meaning": "\"Estou com fome\" — cheio(a): おなかいっぱい",
+     "text": "うぅ…おなかすいたぁ…。今のが、今日のことば！「おなかすいた」。おなか、すいた。ていねいに言うなら、「おなかがすきました」。反対に、いっぱい食べたら、「おなかいっぱい」だよ。今のきみは、どっちかな？",
+     "voiceText": "[pouting] うぅ…おなかすいたぁ…。[giggles] 今のが、今日のことば！「おなかすいた」。[slowly] おなか、すいた。ていねいに言うなら、「おなかがすきました」。反対に、いっぱい食べたら、「おなかいっぱい」だよ。[cheerfully] 今のきみは、どっちかな？"},
+
+    {"id": "jp_tanoshimi", "label": "Tanoshimi!", "category": "Japanese: feelings", "motion": "celebrate,happy",
+     "learn": "楽しみ！", "romaji": "tanoshimi!", "meaning": "\"Mal posso esperar!\"",
+     "text": "何かが待ちきれないときは、「楽しみ！」。たのしみ。「週末、楽しみだね！」とか、「明日の旅行、楽しみ！」とか、使うんだ。スースーはね、きみと次にお話しするのが、いつも楽しみなんだよ。",
+     "voiceText": "[excited] 何かが待ちきれないときは、「楽しみ！」。[slowly] たのしみ。「週末、楽しみだね！」とか、「明日の旅行、楽しみ！」とか、使うんだ。[giggles] スースーはね、きみと次にお話しするのが、いつも楽しみなんだよ。"},
+
+    {"id": "jp_zannen", "label": "Zannen", "category": "Japanese: feelings", "motion": "shrug,cheer",
+     "learn": "残念", "romaji": "zannen", "meaning": "\"Que pena\"",
+     "text": "思っていたようにならなかったときは、「残念」。ざんねん。「雨で、お祭りが中止になっちゃった…残念！」みたいに使うの。でも、残念なことがあっても、次はきっといいことがあるよ。元気出していこうね！",
+     "voiceText": "[sighs] 思っていたようにならなかったときは、「残念」。[slowly] ざんねん。「雨で、お祭りが中止になっちゃった…残念！」みたいに使うの。[softly] でも、残念なことがあっても、次はきっといいことがあるよ。[cheerfully] 元気出していこうね！"},
+
+    {"id": "jp_suki", "label": "~ ga suki desu", "category": "Japanese: feelings", "motion": "shypoint,cheekhand",
+     "learn": "〜が好きです", "romaji": "~ ga suki desu", "meaning": "\"Eu gosto de ~\" — muito: 大好き (daisuki)",
+     "text": "好きなものを伝えるときは、「〜が好きです」。すしが、すきです。ねこが、すきです。もっともっと好きなときは、「大好き」！スースーは…いちご大福と、音楽と…きみが、大好きです。…えへへ。",
+     "voiceText": "[shy] 好きなものを伝えるときは、「〜が好きです」。[slowly] すしが、すきです。ねこが、すきです。もっともっと好きなときは、「大好き」！[giggles] スースーは…いちご大福と、音楽と…きみが、大好きです。…えへへ。"},
+
+    {"id": "jp_atsui", "label": "Atsui desu ne", "category": "Japanese: daily talk", "motion": "lookaround,explain",
+     "learn": "今日は暑いですね", "romaji": "kyou wa atsui desu ne", "meaning": "\"Está quente hoje, né?\" — puxar conversa pelo tempo",
+     "text": "日本ではね、お天気の話から会話を始めることが多いの。「今日は暑いですね」。きょうは、あついですね。寒い日なら、「今日は寒いですね」。最後の「ね」がポイント！「そう思うよね？」って、相手と気持ちを合わせることばなんだ。",
+     "voiceText": "[cheerfully] 日本ではね、お天気の話から会話を始めることが多いの。「今日は暑いですね」。[slowly] きょうは、あついですね。寒い日なら、「今日は寒いですね」。[giggles] 最後の「ね」がポイント！「そう思うよね？」って、相手と気持ちを合わせることばなんだ。"},
+
+    {"id": "jp_nanji", "label": "Ima nanji?", "category": "Japanese: daily talk", "motion": "watch,point",
+     "learn": "今、何時ですか", "romaji": "ima nanji desu ka", "meaning": "\"Que horas são?\" — 半 (han) = e meia",
+     "text": "時間を聞くときは、「今、何時ですか？」。いま、なんじ、ですか？答えは、「三時です」とか、「三時半です」。「半」は、三十分のことだよ。あっ…ついでに時計を見て。休憩の時間じゃないかな？",
+     "voiceText": "[curious] 時間を聞くときは、「今、何時ですか？」。[slowly] いま、なんじ、ですか？答えは、「三時です」とか、「三時半です」。[giggles] 「半」は、三十分のことだよ。[cheerfully] あっ…ついでに時計を見て。休憩の時間じゃないかな？"},
+
+    {"id": "jp_mata_ashita", "label": "Mata ashita", "category": "Japanese: daily talk", "motion": "present,nod",
+     "learn": "また明日", "romaji": "mata ashita", "meaning": "\"Até amanhã\" — また来週 (semana que vem), またね (até mais)",
+     "text": "バイバイするときのことば、「また明日」。また、あした。来週会うなら、「また来週」。いつ会えるかわからないなら、「またね」。スースーは、「さよなら」より、「またね」のほうが好き。だって、また会えるって、約束みたいでしょ？",
+     "voiceText": "[warmly] バイバイするときのことば、「また明日」。[slowly] また、あした。来週会うなら、「また来週」。いつ会えるかわからないなら、「またね」。[softly] スースーは、「さよなら」より、「またね」のほうが好き。だって、また会えるって、約束みたいでしょ？"},
+
+    {"id": "jp_osaki", "label": "Osaki ni shitsurei", "category": "Japanese: daily talk", "motion": "nod,present",
+     "learn": "お先に失礼します", "romaji": "osaki ni shitsurei shimasu", "meaning": "\"Com licença, vou indo\" — ao sair antes dos colegas",
+     "text": "会社や学校で、みんなより先に帰るときは、「お先に失礼します」って言うの。おさきに、しつれい、します。そしたら、残っている人が、「お疲れさまです」って返してくれるよ。このセット、覚えておくと、かっこいいよ！",
+     "voiceText": "[gently] 会社や学校で、みんなより先に帰るときは、「お先に失礼します」って言うの。[slowly] おさきに、しつれい、します。そしたら、残っている人が、「お疲れさまです」って返してくれるよ。[cheerfully] このセット、覚えておくと、かっこいいよ！"},
+
+    {"id": "jp_ganbatte", "label": "Ganbatte", "category": "Japanese: daily talk", "motion": "cheer,nod",
+     "learn": "がんばって", "romaji": "ganbatte", "meaning": "\"Força! / Boa sorte!\" — para si: がんばろう",
+     "text": "だれかを応援したいときは、「がんばって！」。がんばって。自分たちに言うときは、「がんばろう！」だよ。でもね、すごく疲れてる人には、「無理しないでね」のほうが、やさしいかも。…きみも、無理しないでね。",
+     "voiceText": "[excited] だれかを応援したいときは、「がんばって！」。[slowly] がんばって。自分たちに言うときは、「がんばろう！」だよ。[giggles] でもね、すごく疲れてる人には、「無理しないでね」のほうが、やさしいかも。[warmly] …きみも、無理しないでね。"}
   ]
 }

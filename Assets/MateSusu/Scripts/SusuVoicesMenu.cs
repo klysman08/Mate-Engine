@@ -29,7 +29,11 @@ public class SusuVoicesMenu : MonoBehaviour
     const float ControlsHeight = 250f, SliderWidth = 520f;
     const float SectionHeight = 44f;
 
-    TMP_Text frequencyLabel, volumeLabel;
+    // Subtitle / flashcard strip pinned above the scrolling list
+    const float CaptionHeight = 118f, CaptionGap = 6f, CaptionPadding = 24f;
+    const string CaptionIdle = "Tap a phrase: Susu's words show up here.\n<size=80%>Japanese deck: phrase, romaji and meaning.</size>";
+
+    TMP_Text frequencyLabel, volumeLabel, caption;
 
     public string windowTitle = "VOICES";
 
@@ -168,6 +172,7 @@ public class SusuVoicesMenu : MonoBehaviour
 
         var title = outer.Find("Header/TitleText")?.GetComponent<TMP_Text>();
         if (title != null) title.text = windowTitle;
+        if (title != null) BuildCaption(title, (RectTransform)main);
 
         // Footer: reuse the two buttons as STOP and CLOSE.
         var footer = outer.Find("Footer");
@@ -262,6 +267,88 @@ public class SusuVoicesMenu : MonoBehaviour
         t.enableAutoSizing = false;
         t.fontSize = 22f;
         t.alignment = TextAlignmentOptions.Left;
+    }
+
+    // ---------- Subtitles / Japanese deck card ----------
+
+    /// <summary>
+    /// Puts a caption strip between the window title and the phrase list. The caption is a child of the
+    /// scroll view (so it shares its scale and width) anchored just above it, outside the scroll mask;
+    /// the scroll view's top moves down by the caption's height while its bottom edge stays put.
+    /// </summary>
+    void BuildCaption(TMP_Text titleTemplate, RectTransform scrollView)
+    {
+        // Shrink the scroll view from the top only. It is scaled around its pivot, so solve for the new
+        // offsets that keep the visual bottom fixed and lower the visual top by the caption height.
+        float s = scrollView.localScale.y, p = scrollView.pivot.y;
+        float h = scrollView.rect.height, m = scrollView.offsetMin.y;
+        float visualBottom = m + p * h * (1f - s);
+        float newHeight = Mathf.Max(100f, h - (CaptionHeight + CaptionGap));
+        float newMin = visualBottom - p * newHeight * (1f - s);
+        scrollView.offsetMin = new Vector2(scrollView.offsetMin.x, newMin);
+        scrollView.offsetMax = new Vector2(scrollView.offsetMax.x, newMin + newHeight);
+
+        var go = Instantiate(titleTemplate.gameObject, scrollView);
+        go.name = "Voice Caption";
+        var rect = (RectTransform)go.transform;
+        rect.localScale = Vector3.one;          // the title template is scaled differently
+        rect.localRotation = Quaternion.identity;
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(1f, 1f);
+        rect.pivot = new Vector2(0.5f, 0f);
+        rect.offsetMin = new Vector2(CaptionPadding, CaptionGap);
+        rect.offsetMax = new Vector2(-CaptionPadding, CaptionGap + CaptionHeight);
+
+        caption = go.GetComponent<TMP_Text>();
+        caption.richText = true;
+        caption.textWrappingMode = TextWrappingModes.Normal;
+        caption.overflowMode = TextOverflowModes.Ellipsis;
+        caption.enableAutoSizing = true;
+        caption.fontSizeMin = 12f;
+        caption.fontSizeMax = 24f;
+        caption.characterSpacing = 0f;          // the title's wide letter spacing smears kana/kanji
+        caption.wordSpacing = 0f;
+        caption.margin = Vector4.zero;
+        caption.alignment = TextAlignmentOptions.Center;
+        caption.fontStyle = FontStyles.Normal;
+        var jp = JapaneseFont();
+        if (jp != null) caption.font = jp;
+        caption.text = CaptionIdle;
+    }
+
+    static TMP_FontAsset japaneseFont;
+
+    /// <summary>
+    /// A font that has every kana/kanji plus Portuguese accents: a Windows Japanese system font made into a
+    /// dynamic TMP font, or the app's bundled "Japan" atlas (fixed glyph set, some characters missing).
+    /// </summary>
+    static TMP_FontAsset JapaneseFont()
+    {
+        if (japaneseFont != null) return japaneseFont;
+        foreach (var family in new[] { "Yu Gothic UI", "Meiryo UI", "Meiryo", "Yu Gothic", "Noto Sans JP", "MS Gothic" })
+        {
+            try
+            {
+                var f = TMP_FontAsset.CreateFontAsset(family, "Regular");
+                if (f != null && f.HasCharacter('ぱ', false, true)) { f.name = "Susu Caption (" + family + ")"; return japaneseFont = f; }
+            }
+            catch (System.Exception) { /* font not installed */ }
+        }
+        foreach (var f in Resources.FindObjectsOfTypeAll<TMP_FontAsset>())
+            if (f != null && f.name == "Japan") return japaneseFont = f;
+        return null;
+    }
+
+    static string CaptionFor(SusuVoiceLines.Phrase p)
+    {
+        if (p.IsLesson)
+        {
+            string card = $"<size=130%>{p.learn}</size>";
+            if (!string.IsNullOrEmpty(p.romaji)) card += $"\n<i>{p.romaji}</i>";
+            if (!string.IsNullOrEmpty(p.meaning)) card += $"\n<size=85%>{p.meaning}</size>";
+            return card;
+        }
+        return string.IsNullOrEmpty(p.text) ? p.label : p.text;
     }
 
     // ---------- Auto-talk controls ----------
@@ -407,6 +494,7 @@ public class SusuVoicesMenu : MonoBehaviour
     void OnPhraseStarted(SusuVoiceLines.Phrase p)
     {
         if (labels.TryGetValue(p.id, out var l) && l != null) l.fontStyle |= FontStyles.Underline;
+        if (caption != null) caption.text = CaptionFor(p); // stays after the line ends so it can be read
     }
 
     void OnPhraseFinished(SusuVoiceLines.Phrase p)
