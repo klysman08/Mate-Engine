@@ -157,3 +157,39 @@ MonoBehaviour:
     clip: {fileID: -4671056281497532287, guid: f9b0e5962b339944aac807eb70d49031, type: 3}
     start: 4.5
     end: 10.5
+  - name: wave
+    clip: {fileID: 7400000, guid: fbbc2ff95350adb429f67724031df598, type: 2}
+    start: 0
+    end: 4.5
+  - name: wave2
+    clip: {fileID: 7400000, guid: 2a55d6b58d4f9c743adb273f326f277b, type: 2}
+    start: 0
+    end: 4.5
+  - name: peace
+    clip: {fileID: 7400000, guid: 83f358abd5e86a84ca3d9836e3145134, type: 2}
+    start: 0
+    end: 5
+  - name: hawawa
+    clip: {fileID: 7400000, guid: 4cd8101cd2d78ed42a7f16ee5ad129f0, type: 2}
+    start: 0
+    end: 5
+  - name: bunny
+    clip: {fileID: 7400000, guid: 4ae126b05ace66e49b6df8e9cb2fcddd, type: 2}
+    start: 0
+    end: 3.3
+  - name: yoshi
+    clip: {fileID: 7400000, guid: 811a77ef780ad40489b52db4b4594387, type: 2}
+    start: 0
+    end: 3.5
+  - name: kakapo
+    clip: {fileID: 7400000, guid: cda7e1b1706121741a726a0c50162286, type: 2}
+    start: 0
+    end: 3.9
+  - name: cossack
+    clip: {fileID: 7400000, guid: 6f4faeaa8a8d3404e97adf5a377bd49d, type: 2}
+    start: 0
+    end: 4
+  - name: doodle
+    clip: {fileID: 7400000, guid: de8e74f5c85c7094db1750df78e92c7c, type: 2}
+    start: 0
+    end: 4.4

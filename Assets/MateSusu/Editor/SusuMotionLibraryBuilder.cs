@@ -16,6 +16,8 @@ public static class SusuMotionLibraryBuilder
     const string R = AnimRoot + "/Rokoko/";
     const string Q = AnimRoot + "/Quaternius/UAL2_Standard.fbx";
     const string ME = "Assets/MATE ENGINE - Animations/PET_MISC/";
+    const string EB = AnimRoot + "/EmoteBox/";   // Necocoya EmoteBox v3.31 humanoid .anim emotes
+    const string VS = AnimRoot + "/VRSuya/";     // VRSuya dances: personal use only, kept out of git
 
     // name, asset path, clip name suffix ("" = the asset's only clip), start s, end s (0 = clip end)
     static readonly (string name, string path, string clip, float start, float end)[] Table =
@@ -60,6 +62,17 @@ public static class SusuMotionLibraryBuilder
         ("facepalm",   R + "FacePalms_mixamo.fbx",                    "", 3.5f, 8.5f),
         ("headpanic",  R + "SportsFan_Celebrating_HUMANIK_769.fbx",   "", 2.5f, 7.5f),   // hands on head
         ("impatient",  R + "FootTapping_mixamo.fbx",                  "", 4.5f, 10.5f),
+        // EmoteBox emotes (looping ones are repeated by asking for a longer window than the clip)
+        ("wave",       EB + "01_Emote_tefuri1.anim",                  "", 0f, 4.5f),
+        ("wave2",      EB + "02_Emote_tefuri3.anim",                  "", 0f, 4.5f),
+        ("peace",      EB + "03_Emote_peace1.anim",                   "", 0f, 5.0f),
+        ("hawawa",     EB + "04_Emote_hawawa.anim",                   "", 0f, 5.0f),   // flustered
+        ("bunny",      EB + "05_Emote_umauma_OneLoop.anim",           "", 0f, 3.3f),   // hands up like ears, loop
+        ("yoshi",      EB + "06_Emote_yoshi.anim",                    "", 0f, 3.5f),   // "yoshi!" pose
+        ("kakapo",     EB + "07_Emote_Kakapo-Normal_OneLoop.anim",    "", 0f, 3.9f),   // crouch dance, loop
+        ("cossack",    EB + "08_Emote_CossackDance.anim",             "", 0f, 4.0f),   // squat-kick dance, loop
+        // VRSuya (only present on machines that own it)
+        ("doodle",     VS + "VRSuya_Doodle_Dance.anim",               "", 0f, 4.4f),   // short loop
     };
 
     [MenuItem("Tools/MateSusu/Build Motion Library")]

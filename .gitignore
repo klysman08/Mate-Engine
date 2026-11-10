@@ -83,3 +83,7 @@ UserSettings/Layouts
 UserSettings/
 VoiceSamples/
 AgentScreens/
+
+# VRSuya dances: licence allows personal use only and forbids redistributing the data, so they stay local
+Assets/MateSusu/Animations/VRSuya/
+Assets/MateSusu/Animations/VRSuya.meta
