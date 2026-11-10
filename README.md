@@ -1,3 +1,73 @@
+# MateSusu
+
+**MateSusu** is a fork of [Mate Engine](https://github.com/shinyflvre/Mate-Engine) that turns the desktop pet into
+**Susu**, a little companion who talks (in Japanese, with a real voice), chats with you through an LLM, listens
+to your microphone and moves around with ready-made humanoid animations.
+
+**[Download the latest Windows release](https://github.com/klysman08/Mate-Engine/releases/latest)** · everything
+below this section is the original Mate Engine README.
+
+| Chat | AI settings |
+|---|---|
+| ![Chat window](docs/matesusu/chat.png) | ![AI settings window](docs/matesusu/ai-settings.png) |
+| **Voices** | **Auto-talk text over her head** |
+| ![Voices window](docs/matesusu/voices.png) | ![Japanese text over Susu's head](docs/matesusu/balloon.png) |
+
+### What is new
+
+**Voice lines** (radial menu → *Voices*)
+- 120+ pre-recorded Japanese lines in one ElevenLabs voice: greetings, breaks and health, study and work, cheering,
+  sweet talk, stories, "About Susu", plus a **Japanese phrase deck** (phrase, romaji and meaning shown as a card).
+- Every line has a matching body motion, and its words are shown as a subtitle in the window.
+- **Susu talks by herself** every few minutes, and what she says follows the clock: morning, midday, afternoon,
+  evening and night favour different topics; meals, greetings and good-nights are said once a day; opening the app
+  after a while gets a "good morning" / "welcome back" / "long time no see"; she talks less after midnight.
+- She **waits while Windows is playing sound** (music, videos, calls) and speaks once it has been quiet for a few seconds.
+- Lines she says by herself also float **over her head** in Japanese, with a soft shadow.
+
+**Chat** (radial menu → *Chat*)
+- A new chat window: bubbles, a text box, **microphone** (speak, it stops on silence, transcribes and sends) and a
+  **new chat** button that forgets the conversation.
+- Replies come from **OpenRouter** and are read aloud with Susu's voice. The local LLM was removed.
+
+**AI settings** (radial menu → *AI*)
+- Paste your **OpenRouter** and **ElevenLabs** API keys in the app (stored encrypted for your Windows user).
+- Pick the **chat model** (GPT-6 Luna, Claude Haiku 5.5, Gemini 3.8 Flash, DeepSeek V4.1 Flash, Claude Sonnet 5.5,
+  GPT-6.1 Terra, Grok 4.7, GPT-4o mini) and the **voice** for replies (ElevenLabs v4 / v4 Turbo, or OpenRouter voices).
+- Fix the language **Susu replies in** (write in Portuguese or English, she answers in Japanese) and the language
+  you speak into the microphone.
+- Switch spoken replies, the text over her head and idle motions on or off.
+
+**Motions**
+- Ready-made humanoid clips (Rokoko mocap, Quaternius UAL2, EmoteBox) played on top of the Mate Engine animator.
+- 30+ calm **idle motions** (looking around, stretching, checking her phone, waving, posing...) so she does not loop
+  the same few idles.
+- Extra **dances** mixed in with the built-in ones when music plays.
+
+### Setup
+
+1. Download the zip from [Releases](https://github.com/klysman08/Mate-Engine/releases/latest), unzip it and run `MateSusu.exe`.
+2. Right-click the avatar → **AI** and paste your keys:
+   - [OpenRouter](https://openrouter.ai/keys) — chat (and the OpenRouter voices / microphone fallback).
+   - [ElevenLabs](https://elevenlabs.io/app/settings/api-keys) — Susu's voice in chat and microphone transcription.
+   The pre-recorded voice lines work without any key.
+3. Optional: rename `env.example.txt` to `.env` next to the exe to set everything in a file (see [`.env.example`](.env.example)).
+
+### Building from source
+
+Unity **6000.2.6f2**. Open the project, then **Tools → MateSusu → Build Motion Library** and
+**Tools → MateSusu → Build Windows Release** (writes `Builds/MateSusu-v<version>/`).
+Voice lines are generated with `Tools/MateSusu/generate_voice_lines_elevenlabs.py`.
+
+### Credits and licences
+
+- Mate Engine by [shinyflvre](https://github.com/shinyflvre/Mate-Engine) — Mixed GNU AGPL v3 & MateProv2 licence
+  ([LICENSE.md](LICENSE.md)). MateSusu is free, non-commercial and its full source is in this repository.
+- Animation credits: [`Assets/MateSusu/Animations/CREDITS.md`](Assets/MateSusu/Animations/CREDITS.md). Packs whose
+  licences allow personal use only (VRSuya, Syukusei, Chiu poses) are not in the repository or in the release.
+
+---
+
 # MateEngine for Linux (Unoffical)
 Github: https://github.com/Marksonthegamer/Mate-Engine-Linux-Port
 
