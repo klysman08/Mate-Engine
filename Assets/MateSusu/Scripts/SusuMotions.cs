@@ -50,9 +50,9 @@ public class SusuMotions : MonoBehaviour
         {
             var m = lib.Find(raw.Trim());
             if (m == null) { Debug.LogWarning($"[SusuMotions] Unknown motion '{raw.Trim()}'."); continue; }
-            if (!player.Play(m.clip, m.start, m.Duration, Fade)) yield break; // avatar busy (dragging, sitting...)
+            if (!player.Play(m.clip, m.start, m.PlayTime, Fade, m.Speed, false, !m.noFootIK)) yield break; // avatar busy (dragging, sitting...)
             // Start the next one while this one is fading out, so they cross-fade.
-            yield return new WaitForSeconds(Mathf.Max(0.1f, m.Duration - Fade));
+            yield return new WaitForSeconds(Mathf.Max(0.1f, m.PlayTime - Fade));
         }
         running = null;
     }

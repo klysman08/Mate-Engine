@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Creates the MateSusu runtime object at startup:
-/// voice playback + voice lines + Voices radial slice/window always, the OpenRouter chat only when a key exists.
+/// chat client, voice playback, voice lines, motions and the Voices / AI / Chat windows.
 /// </summary>
 public static class MateSusuBootstrap
 {
@@ -16,17 +16,21 @@ public static class MateSusuBootstrap
         Root = new GameObject("MateSusu");
         Object.DontDestroyOnLoad(Root);
 
-        var key = MateSusuEnv.GetFirst("OPENROUTER_API_KEY", "API_KEY");
-        if (!string.IsNullOrEmpty(key))
-            Root.AddComponent<OpenRouterChat>().Configure(key);
-        else
-            Debug.Log("[MateSusu] No OpenRouter API key in .env - chat uses the local LLM, voice lines play from local files only.");
+        // Always there: the key can be typed later in the AI window.
+        Root.AddComponent<OpenRouterChat>().Configure();
 
         Root.AddComponent<OpenRouterTTS>();
         Root.AddComponent<SusuVoiceLines>();
+        Root.AddComponent<SusuSystemAudio>();
         Root.AddComponent<SusuAutoTalk>();
         Root.AddComponent<SusuClipPlayer>();
         Root.AddComponent<SusuMotions>();
+        Root.AddComponent<SusuDances>();
+        Root.AddComponent<SusuIdleMotions>();
+        Root.AddComponent<SusuSpeechBalloon>();
+        Root.AddComponent<SusuChatMic>();
         Root.AddComponent<SusuVoicesMenu>();
+        Root.AddComponent<SusuAiMenu>();
+        Root.AddComponent<SusuChatWindow>();
     }
 }

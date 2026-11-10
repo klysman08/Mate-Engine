@@ -87,3 +87,10 @@ AgentScreens/
 # VRSuya dances: licence allows personal use only and forbids redistributing the data, so they stay local
 Assets/MateSusu/Animations/VRSuya/
 Assets/MateSusu/Animations/VRSuya.meta
+
+# Syukusei dance (Necocoya): personal use only per its ReadMe, so it stays local
+Assets/MateSusu/Animations/Syukusei/
+Assets/MateSusu/Animations/Syukusei.meta
+# Chiu pose pack: no licence text shipped with it, so it stays local until its terms are known
+Assets/MateSusu/Animations/Poses/
+Assets/MateSusu/Animations/Poses.meta

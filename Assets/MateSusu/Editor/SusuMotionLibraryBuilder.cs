@@ -18,6 +18,12 @@ public static class SusuMotionLibraryBuilder
     const string ME = "Assets/MATE ENGINE - Animations/PET_MISC/";
     const string EB = AnimRoot + "/EmoteBox/";   // Necocoya EmoteBox v3.31 humanoid .anim emotes
     const string VS = AnimRoot + "/VRSuya/";     // VRSuya dances: personal use only, kept out of git
+    const string SY = AnimRoot + "/Syukusei/";   // Necocoya Syukusei dance: personal use only, kept out of git
+    const string PC = AnimRoot + "/Poses/Chiu/";       // single-frame poses, kept out of git
+    const float Hold = 3.2f;
+
+    /// <summary>Folders whose licences allow personal use only: left out of public builds.</summary>
+    static readonly string[] LocalOnly = { VS, SY, PC };                     // seconds a single-frame pose is held
 
     // name, asset path, clip name suffix ("" = the asset's only clip), start s, end s (0 = clip end)
     static readonly (string name, string path, string clip, float start, float end)[] Table =
@@ -73,23 +79,59 @@ public static class SusuMotionLibraryBuilder
         ("cossack",    EB + "08_Emote_CossackDance.anim",             "", 0f, 4.0f),   // squat-kick dance, loop
         // VRSuya (only present on machines that own it)
         ("doodle",     VS + "VRSuya_Doodle_Dance.anim",               "", 0f, 4.4f),   // short loop
+        // Dances for SusuDances (see DanceSpeed): full choreographies, or a loop repeated for a while
+        ("syukusei_a",   SY + "Syukusei_A.anim",                      "", 0f, 0f),
+        ("syukusei_b",   SY + "Syukusei_B.anim",                      "", 0f, 0f),
+        ("doodle_dance", VS + "VRSuya_Doodle_Dance.anim",             "", 0f, 17.6f),
+        ("kakapo_dance", EB + "07_Emote_Kakapo-Normal_OneLoop.anim",  "", 0f, 15.6f),
+        ("cossack_dance", EB + "08_Emote_CossackDance.anim",          "", 0f, 16f),
+        // Single-frame poses, held for a moment (only on machines that have the pose packs)
+        ("pose_stretch",  PC + "chiu_260307-2.anim",     "", 0f, Hold),   // one arm up, hand behind the head
+        ("pose_whisper",  PC + "chiu_260307-3.anim",     "", 0f, Hold),   // both hands to the mouth
+        ("pose_vsign",    PC + "chiu_260307-4.anim",     "", 0f, Hold),   // V sign by the eye, hand on hip
+        ("pose_think",    PC + "chiu_260309.anim",       "", 0f, Hold),   // hand on chin
+        ("pose_hideface", PC + "chiu_260314.anim",       "", 0f, Hold),   // arm over the face
+        ("pose_offer",    PC + "chiu_260317-Glass.anim", "", 0f, Hold),   // palm up
+        ("pose_shh",      PC + "chiu_260327.anim",       "", 0f, Hold),   // finger to the lips, hand on hip
+        ("pose_tada",     PC + "chiu_260329.anim",       "", 0f, Hold),   // wide stance, pointing
+    };
+
+    /// <summary>Calm motions SusuIdleMotions may play by itself between voice lines (nothing that needs a reason,
+    /// like eating or a face-palm).</summary>
+    static readonly HashSet<string> Idle = new HashSet<string>
+    {
+        "lookaround", "stretch", "tilt", "sway", "behindback", "foldarms", "watch", "phone", "shimmy", "proud",
+        "impatient", "idea", "taphead", "cheekhand", "flirty", "wave", "wave2", "peace", "yoshi", "bunny", "giggle",
+        "happy", "nod", "shrug", "happydance", "shypoint", "explain", "drink", "clap", "kakapo", "doodle",
+        "pose_stretch", "pose_whisper", "pose_vsign", "pose_think", "pose_hideface", "pose_offer", "pose_shh", "pose_tada",
+    };
+
+    /// <summary>Motions SusuDances may play while music is on, with their playback speed.</summary>
+    static readonly Dictionary<string, float> DanceSpeed = new Dictionary<string, float>
+    {
+        { "syukusei_a", 1.33f }, { "syukusei_b", 1.33f }, // the author's ReadMe: the clips are slow, play at about 1.33
+        { "doodle_dance", 1f }, { "kakapo_dance", 1f }, { "cossack_dance", 1f },
     };
 
     [MenuItem("Tools/MateSusu/Build Motion Library")]
     static void BuildMenu() => Debug.Log("[SusuMotions] " + Build());
 
-    public static string Build()
+    /// <param name="publicOnly">true = skip the personal-use packs (for builds that will be shared).</param>
+    public static string Build(bool publicOnly = false)
     {
         var report = new StringBuilder();
         report.Append(FixImportSettings());
 
         var motions = new List<SusuMotionLibrary.Motion>();
+        int skipped = 0;
         foreach (var (name, path, clipName, start, end) in Table)
         {
+            if (publicOnly && LocalOnly.Any(path.StartsWith)) { skipped++; continue; }
             var clip = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>()
                 .FirstOrDefault(c => !c.name.StartsWith("__preview__") && (clipName == "" || c.name.EndsWith(clipName)));
             if (clip == null) { report.Append("missing clip for '").Append(name).Append("': ").Append(path).Append('\n'); continue; }
-            motions.Add(new SusuMotionLibrary.Motion { name = name, clip = clip, start = start, end = end });
+            bool dance = DanceSpeed.TryGetValue(name, out float speed);
+            motions.Add(new SusuMotionLibrary.Motion { name = name, clip = clip, start = start, end = end, speed = dance ? speed : 1f, dance = dance, idle = Idle.Contains(name), noFootIK = !HasFootGoals(clip) });
         }
 
         var lib = AssetDatabase.LoadAssetAtPath<SusuMotionLibrary>(LibraryPath);
@@ -102,8 +144,13 @@ public static class SusuMotionLibraryBuilder
         EditorUtility.SetDirty(lib);
         AssetDatabase.SaveAssets();
         report.Append(motions.Count).Append(" motions in ").Append(LibraryPath);
+        if (skipped > 0) report.Append(" (").Append(skipped).Append(" personal-use motions left out)");
         return report.ToString();
     }
+
+    /// <summary>Humanoid clips normally carry foot goal curves (LeftFootT/Q); some hand-made pose clips do not.</summary>
+    static bool HasFootGoals(AnimationClip clip) =>
+        AnimationUtility.GetCurveBindings(clip).Any(b => b.propertyName.StartsWith("LeftFootT"));
 
     /// <summary>Humanoid, no materials, and in place: horizontal travel and turning go to root motion,
     /// which Mate Engine ignores, so Susu never wanders off her window.</summary>

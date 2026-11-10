@@ -31,6 +31,9 @@ public class SusuVoiceLines : MonoBehaviour
         public string motion;    // body motion(s) while speaking, names from SusuMotionLibrary: "cheer" or "drink,nod"
         public string hours;     // auto-talk window, 24h: "5-11", "22-4", "13-15,22-4" (empty = any time)
         public bool noAuto;      // true = only when the user clicks it
+        public string daily;     // auto-talk says it at most once a day; lines sharing a key share that one turn
+        public bool greet;       // opening line of its time-of-day period (needs hours)
+        public string trigger;   // "startup" = app opened after a while, "longtime" = after days away
 
         public bool AllowedAt(int hour)
         {
@@ -127,10 +130,14 @@ public class SusuVoiceLines : MonoBehaviour
         if (p != null) Play(p);
     }
 
-    public void Play(Phrase p)
+    /// <summary>True when the line now playing (or about to) was started by auto-talk, not by a click.</summary>
+    public bool CurrentIsAuto { get; private set; }
+
+    public void Play(Phrase p, bool auto = false)
     {
         var tts = OpenRouterTTS.Instance;
         if (p == null || tts == null) return;
+        CurrentIsAuto = auto;
 
         var clip = GetLocalClip(p);
         if (clip != null)
@@ -209,6 +216,28 @@ public static class WavUtil
             w.Write(new[] { 'd', 'a', 't', 'a' });
             w.Write(pcm16Mono.Length);
             w.Write(pcm16Mono);
+        }
+    }
+
+    /// <summary>A complete WAV file in memory from mono float samples (-1..1).</summary>
+    public static byte[] ToBytes(float[] samples, int count, int rate)
+    {
+        var pcm = new byte[count * 2];
+        for (int i = 0; i < count; i++)
+        {
+            short s = (short)Mathf.Clamp(Mathf.RoundToInt(samples[i] * 32767f), short.MinValue, short.MaxValue);
+            pcm[2 * i] = (byte)(s & 0xff);
+            pcm[2 * i + 1] = (byte)((s >> 8) & 0xff);
+        }
+        using (var ms = new MemoryStream(44 + pcm.Length))
+        using (var w = new BinaryWriter(ms))
+        {
+            w.Write(new[] { 'R', 'I', 'F', 'F' }); w.Write(36 + pcm.Length);
+            w.Write(new[] { 'W', 'A', 'V', 'E', 'f', 'm', 't', ' ' });
+            w.Write(16); w.Write((short)1); w.Write((short)1); w.Write(rate); w.Write(rate * 2); w.Write((short)2); w.Write((short)16);
+            w.Write(new[] { 'd', 'a', 't', 'a' }); w.Write(pcm.Length); w.Write(pcm);
+            w.Flush();
+            return ms.ToArray();
         }
     }
 

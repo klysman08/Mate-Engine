@@ -17,179 +17,463 @@ MonoBehaviour:
     clip: {fileID: -4671056281497532287, guid: 424772bbe7d8c294fb16aee72bd9f99e, type: 3}
     start: 4.6
     end: 9.4
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: celebrate
     clip: {fileID: -4671056281497532287, guid: e68081839d790704e94bfd1fee7c71a3, type: 3}
     start: 6.3
     end: 7.8
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: jump
     clip: {fileID: -4671056281497532287, guid: 540159499f7f3054ebe7f1ab4edea0e3, type: 3}
     start: 4.5
     end: 8.2
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: clap
     clip: {fileID: -4671056281497532287, guid: bcee04a2d94d39b45832257c205688f1, type: 3}
     start: 4
     end: 9
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: happydance
     clip: {fileID: -4671056281497532287, guid: 58c4bb664b00dea4194b837d8c8f95bb, type: 3}
     start: 3
     end: 9
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: shimmy
     clip: {fileID: -4671056281497532287, guid: 5d85305a027442443974e56623610cf6, type: 3}
     start: 2
     end: 7
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: sway
     clip: {fileID: -4671056281497532287, guid: 821822e8ba2818d49a2f71f7ab1cad02, type: 3}
     start: 1
     end: 9
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: laugh
     clip: {fileID: -4671056281497532287, guid: dc5639b693d86c7418a1471c533caa55, type: 3}
     start: 15
     end: 20
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: happy
     clip: {fileID: 7400000, guid: 77f33fbbab3e94e41ac667133e1afdd0, type: 2}
     start: 0
     end: 0
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: giggle
     clip: {fileID: 7400000, guid: a5e8cc322431f4b43aa7762aab58f93d, type: 2}
     start: 0
     end: 0
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: flirty
     clip: {fileID: -4671056281497532287, guid: 85840b99a35eba44b9225a8a44918640, type: 3}
     start: 8.5
     end: 13.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: cheekhand
     clip: {fileID: -4671056281497532287, guid: ac82da83493e1024f8bdff877836d042, type: 3}
     start: 52
     end: 55.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: shypoint
     clip: {fileID: 7400000, guid: b1505d9790a48b249b0f6beb2375420a, type: 2}
     start: 0
     end: 0
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: behindback
     clip: {fileID: -4671056281497532287, guid: 6e530830c7ecfac4c8c26f187e902a7c, type: 3}
     start: 16.5
     end: 24.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: tilt
     clip: {fileID: -4671056281497532287, guid: a807b8a0daefc0c4195ccf247cd479cf, type: 3}
     start: 3.5
     end: 6.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: explain
     clip: {fileID: -4671056281497532287, guid: 70e30bfdae8c47c42b218ac4c4bbe7c1, type: 3}
     start: 12
     end: 17
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: present
     clip: {fileID: -4671056281497532287, guid: 2657af3376c03b448b6d1efbf7435314, type: 3}
     start: 7
     end: 13
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: point
     clip: {fileID: -4671056281497532287, guid: 055fa048a509d454d99ecf1f4f028d59, type: 3}
     start: 6.5
     end: 12
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: idea
     clip: {fileID: -4671056281497532287, guid: fa2808d8e8276fd4da782080907d470a, type: 3}
     start: 23.5
     end: 27.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: taphead
     clip: {fileID: -4671056281497532287, guid: 7754d370fd0ba6447a83d20de46353e2, type: 3}
     start: 7.3
     end: 11.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: shrug
     clip: {fileID: -4671056281497532287, guid: e624098d97d77814ea244268ed716a36, type: 3}
     start: 5.3
     end: 8
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: nod
     clip: {fileID: -4234491588545506125, guid: c26eefcf83e2e43459b46a6f3af0547e, type: 3}
     start: 0
     end: 0
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: headshake
     clip: {fileID: 5000254507835852519, guid: c26eefcf83e2e43459b46a6f3af0547e, type: 3}
     start: 0
     end: 0
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: nonono
     clip: {fileID: -4671056281497532287, guid: 6bf498800da7ed743bfffa3c85c0c7a2, type: 3}
     start: 6
     end: 12
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: lookaround
     clip: {fileID: -4671056281497532287, guid: bffd9960b84da564d9742b52366eadd6, type: 3}
     start: 3
     end: 11
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: foldarms
     clip: {fileID: -7062361950610221846, guid: c26eefcf83e2e43459b46a6f3af0547e, type: 3}
     start: 0
     end: 4
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: proud
     clip: {fileID: -4671056281497532287, guid: 9768ffadec1b6974aac204f3ad62e953, type: 3}
     start: 46.6
     end: 52.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: stretch
     clip: {fileID: -4671056281497532287, guid: 8a8354cc93affc249be83159a3d3406d, type: 3}
     start: 9
     end: 12.2
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: drink
     clip: {fileID: -4671056281497532287, guid: 5a4cf3d7da05f634ba84a8be2211e211, type: 3}
     start: 7.5
     end: 13
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: eat
     clip: {fileID: -4671056281497532287, guid: e5aeddc1b05ef844bad6ebd094b87911, type: 3}
     start: 14
     end: 19.5
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: nibble
     clip: {fileID: -5566208886993524023, guid: c26eefcf83e2e43459b46a6f3af0547e, type: 3}
     start: 0
     end: 0
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: phone
     clip: {fileID: -4671056281497532287, guid: 8842566e3f67fa74daa183f81d0dc886, type: 3}
     start: 3.5
     end: 8.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: watch
     clip: {fileID: -4671056281497532287, guid: 6e530830c7ecfac4c8c26f187e902a7c, type: 3}
     start: 25.5
     end: 31.8
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: facepalm
     clip: {fileID: -4671056281497532287, guid: 0eed457319a262c4d8095907ae2a86cd, type: 3}
     start: 3.5
     end: 8.5
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: headpanic
     clip: {fileID: -4671056281497532287, guid: 225d2300d5642bf43b64fa6a7d1db386, type: 3}
     start: 2.5
     end: 7.5
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: impatient
     clip: {fileID: -4671056281497532287, guid: f9b0e5962b339944aac807eb70d49031, type: 3}
     start: 4.5
     end: 10.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: wave
     clip: {fileID: 7400000, guid: fbbc2ff95350adb429f67724031df598, type: 2}
     start: 0
     end: 4.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: wave2
     clip: {fileID: 7400000, guid: 2a55d6b58d4f9c743adb273f326f277b, type: 2}
     start: 0
     end: 4.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: peace
     clip: {fileID: 7400000, guid: 83f358abd5e86a84ca3d9836e3145134, type: 2}
     start: 0
     end: 5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: hawawa
     clip: {fileID: 7400000, guid: 4cd8101cd2d78ed42a7f16ee5ad129f0, type: 2}
     start: 0
     end: 5
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: bunny
     clip: {fileID: 7400000, guid: 4ae126b05ace66e49b6df8e9cb2fcddd, type: 2}
     start: 0
     end: 3.3
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: yoshi
     clip: {fileID: 7400000, guid: 811a77ef780ad40489b52db4b4594387, type: 2}
     start: 0
     end: 3.5
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: kakapo
     clip: {fileID: 7400000, guid: cda7e1b1706121741a726a0c50162286, type: 2}
     start: 0
     end: 3.9
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
   - name: cossack
     clip: {fileID: 7400000, guid: 6f4faeaa8a8d3404e97adf5a377bd49d, type: 2}
     start: 0
     end: 4
+    speed: 1
+    dance: 0
+    idle: 0
+    noFootIK: 0
   - name: doodle
     clip: {fileID: 7400000, guid: de8e74f5c85c7094db1750df78e92c7c, type: 2}
     start: 0
     end: 4.4
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
+  - name: syukusei_a
+    clip: {fileID: 7400000, guid: 9b8efec1e05bfc04aa9e63e8d4866cc9, type: 2}
+    start: 0
+    end: 0
+    speed: 1.33
+    dance: 1
+    idle: 0
+    noFootIK: 0
+  - name: syukusei_b
+    clip: {fileID: 7400000, guid: 7a08f547da73e404db00a49e5dd1c824, type: 2}
+    start: 0
+    end: 0
+    speed: 1.33
+    dance: 1
+    idle: 0
+    noFootIK: 0
+  - name: doodle_dance
+    clip: {fileID: 7400000, guid: de8e74f5c85c7094db1750df78e92c7c, type: 2}
+    start: 0
+    end: 17.6
+    speed: 1
+    dance: 1
+    idle: 0
+    noFootIK: 0
+  - name: kakapo_dance
+    clip: {fileID: 7400000, guid: cda7e1b1706121741a726a0c50162286, type: 2}
+    start: 0
+    end: 15.6
+    speed: 1
+    dance: 1
+    idle: 0
+    noFootIK: 0
+  - name: cossack_dance
+    clip: {fileID: 7400000, guid: 6f4faeaa8a8d3404e97adf5a377bd49d, type: 2}
+    start: 0
+    end: 16
+    speed: 1
+    dance: 1
+    idle: 0
+    noFootIK: 0
+  - name: pose_stretch
+    clip: {fileID: 7400000, guid: 5e073865ef0cace4888afebd7e86fc67, type: 2}
+    start: 0
+    end: 3.2
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
+  - name: pose_whisper
+    clip: {fileID: 7400000, guid: 2e64d5d10864627419a434e485ff7434, type: 2}
+    start: 0
+    end: 3.2
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
+  - name: pose_vsign
+    clip: {fileID: 7400000, guid: 56b847d2a3acf55498b0bb32fe155837, type: 2}
+    start: 0
+    end: 3.2
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
+  - name: pose_think
+    clip: {fileID: 7400000, guid: 1656b8c375dacf140b5096a1e84f6f4a, type: 2}
+    start: 0
+    end: 3.2
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
+  - name: pose_hideface
+    clip: {fileID: 7400000, guid: 43c6419e818ce4e49ac359efb32bc007, type: 2}
+    start: 0
+    end: 3.2
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
+  - name: pose_offer
+    clip: {fileID: 7400000, guid: de5d0bb319bf59647a8db4d018412f65, type: 2}
+    start: 0
+    end: 3.2
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
+  - name: pose_shh
+    clip: {fileID: 7400000, guid: fdfad6aeac08e384b82796d94b0238aa, type: 2}
+    start: 0
+    end: 3.2
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0
+  - name: pose_tada
+    clip: {fileID: 7400000, guid: 325a8fd867bab2e4198665d2dec982a7, type: 2}
+    start: 0
+    end: 3.2
+    speed: 1
+    dance: 0
+    idle: 1
+    noFootIK: 0

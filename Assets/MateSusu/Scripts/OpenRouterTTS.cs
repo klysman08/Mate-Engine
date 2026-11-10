@@ -70,8 +70,8 @@ public class OpenRouterTTS : MonoBehaviour
 
     public bool IsSpeaking => source != null && source.isPlaying;
 
-    string apiKey;
-    string elevenKey;
+    string apiKey => SusuAiSettings.OpenRouterKey;
+    string elevenKey => SusuAiSettings.ElevenLabsKey;
     AudioSource source;
     UnityWebRequest current;
     readonly float[] window = new float[256];
@@ -90,9 +90,8 @@ public class OpenRouterTTS : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
 
-        apiKey = MateSusuEnv.GetFirst("OPENROUTER_API_KEY", "API_KEY");
-        speakReplies = MateSusuEnv.GetBool("OPENROUTER_TTS_ENABLED", true);
-        model = MateSusuEnv.Get("OPENROUTER_TTS_MODEL", DefaultModel);
+        speakReplies = SusuAiSettings.SpeakReplies; // OPENROUTER_TTS_ENABLED unless changed in the AI window
+        SusuAiSettings.Changed += OnSettingsChanged;
         voiceEn = MateSusuEnv.Get("OPENROUTER_TTS_VOICE_EN", DefaultVoiceEn);
         voiceJa = MateSusuEnv.Get("OPENROUTER_TTS_VOICE_JA", DefaultVoiceJa);
         instructions = MateSusuEnv.Get("OPENROUTER_TTS_INSTRUCTIONS", DefaultInstructions);
@@ -101,20 +100,11 @@ public class OpenRouterTTS : MonoBehaviour
         volume = MateSusuEnv.GetFloat("OPENROUTER_TTS_VOLUME", volume);
         if (PlayerPrefs.HasKey(VolumePref)) volume = Mathf.Clamp01(PlayerPrefs.GetFloat(VolumePref));
 
-        elevenKey = MateSusuEnv.Get("ELEVENLABS_API_KEY");
         elevenVoiceId = MateSusuEnv.Get("ELEVENLABS_VOICE_ID", elevenVoiceId).Trim();
-        elevenModel = MateSusuEnv.GetFirst("ELEVENLABS_CHAT_MODEL", "ELEVENLABS_MODEL") ?? elevenModel;
         elevenStability = Mathf.Clamp01(MateSusuEnv.GetFloat("ELEVENLABS_STABILITY", elevenStability));
         elevenSimilarity = Mathf.Clamp01(MateSusuEnv.GetFloat("ELEVENLABS_SIMILARITY", elevenSimilarity));
 
-        bool hasEleven = !string.IsNullOrEmpty(elevenKey);
-        string wanted = MateSusuEnv.Get("SUSU_TTS_PROVIDER", hasEleven ? "elevenlabs" : "openrouter").Trim().ToLowerInvariant();
-        provider = wanted == "elevenlabs" || wanted == "eleven" ? Provider.ElevenLabs : Provider.OpenRouter;
-        if (provider == Provider.ElevenLabs && !hasEleven)
-        {
-            Debug.LogWarning("[SusuTTS] SUSU_TTS_PROVIDER is elevenlabs but ELEVENLABS_API_KEY is missing; using OpenRouter.");
-            provider = Provider.OpenRouter;
-        }
+        ApplyVoiceModel();
 
         source = gameObject.AddComponent<AudioSource>();
         source.playOnAwake = false;
@@ -134,8 +124,34 @@ public class OpenRouterTTS : MonoBehaviour
 
     void OnDestroy()
     {
+        SusuAiSettings.Changed -= OnSettingsChanged;
         if (Instance == this) Instance = null;
         Stop();
+    }
+
+    void OnSettingsChanged()
+    {
+        speakReplies = SusuAiSettings.SpeakReplies;
+        ApplyVoiceModel();
+    }
+
+    /// <summary>Reads "provider:model" from the settings. A provider without a key falls back to the other one.</summary>
+    void ApplyVoiceModel()
+    {
+        string choice = SusuAiSettings.VoiceModel;
+        int colon = choice.IndexOf(':');
+        bool wantsEleven = choice.StartsWith("elevenlabs", StringComparison.OrdinalIgnoreCase);
+        string name = colon >= 0 ? choice.Substring(colon + 1).Trim() : "";
+
+        if (wantsEleven && name.Length > 0) elevenModel = name;
+        if (!wantsEleven) model = name.Length > 0 ? name : DefaultModel;
+
+        var before = provider;
+        provider = wantsEleven ? Provider.ElevenLabs : Provider.OpenRouter;
+        if (provider == Provider.ElevenLabs && string.IsNullOrEmpty(elevenKey) && !string.IsNullOrEmpty(apiKey)) provider = Provider.OpenRouter;
+        else if (provider == Provider.OpenRouter && string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(elevenKey)) provider = Provider.ElevenLabs;
+        if (provider != before && source != null)
+            Debug.Log($"[SusuTTS] Chat voice now {provider} '{(provider == Provider.ElevenLabs ? elevenModel : model)}'");
     }
 
     public void Stop()
@@ -160,16 +176,18 @@ public class OpenRouterTTS : MonoBehaviour
         }
     }
 
-    /// <summary>Speaks the text if TTS is enabled. Interrupts anything already playing.</summary>
-    public void Speak(string text, Action onStarted = null, Action onFinished = null)
+    /// <summary>Speaks the text if TTS is enabled. Interrupts anything already playing.
+    /// Returns false when nothing will be spoken (voice off, no key, empty text): onFinished is then never called.</summary>
+    public bool Speak(string text, Action onStarted = null, Action onFinished = null)
     {
-        if (!speakReplies || !HasApiKey) return;
+        if (!speakReplies || !HasApiKey) return false;
         text = CleanForSpeech(text);
-        if (text.Length == 0) return;
+        if (text.Length == 0) return false;
         Stop();
         Synthesize(text, IsMostlyJapanese(text), null,
             (pcm, rate) => PlayClip(PcmToClip(pcm, rate), onStarted, onFinished, true),
-            null);
+            error => onFinished?.Invoke()); // no voice this time: still let the caller finish
+        return true;
     }
 
     /// <summary>
@@ -179,7 +197,7 @@ public class OpenRouterTTS : MonoBehaviour
     /// </summary>
     public void Synthesize(string text, bool japanese, string extraDirection, Action<byte[], int> onDone, Action<string> onError)
     {
-        if (!HasApiKey) { onError?.Invoke($"No {provider} API key in .env"); return; }
+        if (!HasApiKey) { onError?.Invoke($"No {provider} API key"); return; }
         if (provider == Provider.ElevenLabs)
         {
             StartCoroutine(SendRoutine(BuildElevenLabsRequest(text, japanese ? "ja" : "en"), ElevenSampleRate, "ElevenLabs", onDone, onError));

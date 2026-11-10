@@ -26,7 +26,7 @@ public class SusuVoicesMenu : MonoBehaviour
     // Phrase grid inside the window's scroll content
     const float ButtonWidth = 280f, ButtonHeight = 58f, ColumnX = 150f, RowSpacing = 14f, TopPadding = 24f;
     // Auto-talk controls block above the grid
-    const float ControlsHeight = 250f, SliderWidth = 520f;
+    const float ControlsHeight = 305f, SliderWidth = 520f;
     const float SectionHeight = 44f;
 
     // Subtitle / flashcard strip pinned above the scrolling list
@@ -106,6 +106,7 @@ public class SusuVoicesMenu : MonoBehaviour
 
             var slice = Instantiate(template, template.transform.parent);
             slice.name = "Voices";
+            foreach (var hook in slice.GetComponents<SusuChatRadialHook>()) DestroyImmediate(hook); // copied from the chat slice
             var button = slice.GetComponent<Xamin.Button>();
             button.id = RadialId;
             button.action = new UnityEvent(); // drop the copied "open chat" call
@@ -132,7 +133,7 @@ public class SusuVoicesMenu : MonoBehaviour
         return added;
     }
 
-    static string IdOf(GameObject go)
+    public static string IdOf(GameObject go)
     {
         var b = go.GetComponent<Xamin.Button>();
         return b != null ? b.id : null;
@@ -253,7 +254,7 @@ public class SusuVoicesMenu : MonoBehaviour
         return true;
     }
 
-    static void AddSectionTitle(TMP_Text titleTemplate, RectTransform content, string text, float y, float contentWidth)
+    public static void AddSectionTitle(TMP_Text titleTemplate, RectTransform content, string text, float y, float contentWidth)
     {
         var go = Instantiate(titleTemplate.gameObject, content);
         go.name = "Section " + text;
@@ -322,7 +323,7 @@ public class SusuVoicesMenu : MonoBehaviour
     /// A font that has every kana/kanji plus Portuguese accents: a Windows Japanese system font made into a
     /// dynamic TMP font, or the app's bundled "Japan" atlas (fixed glyph set, some characters missing).
     /// </summary>
-    static TMP_FontAsset JapaneseFont()
+    public static TMP_FontAsset JapaneseFont()
     {
         if (japaneseFont != null) return japaneseFont;
         foreach (var family in new[] { "Yu Gothic UI", "Meiryo UI", "Meiryo", "Yu Gothic", "Noto Sans JP", "MS Gothic" })
@@ -373,9 +374,23 @@ public class SusuVoicesMenu : MonoBehaviour
             toggle.onValueChanged.AddListener(v => { if (SusuAutoTalk.Instance != null) SusuAutoTalk.Instance.Enabled = v; });
         }
 
+        // "Wait for silence" checkbox: no automatic lines over music, videos or calls
+        var quietRect = CloneControl(toggleTemplate, content, "AutoTalk Wait For Silence");
+        info = quietRect.Find("INFO");
+        if (info != null) DestroyImmediate(info.gameObject);
+        quietRect.anchoredPosition = new Vector2(toggleRect.anchoredPosition.x, -95f);
+        SetLabel(quietRect, "WAIT WHILE SOUND IS PLAYING");
+        var quiet = quietRect.GetComponent<Toggle>();
+        if (quiet != null)
+        {
+            quiet.onValueChanged = new Toggle.ToggleEvent();
+            quiet.SetIsOnWithoutNotify(auto == null || auto.WaitForSilence);
+            quiet.onValueChanged.AddListener(v => { if (SusuAutoTalk.Instance != null) SusuAutoTalk.Instance.WaitForSilence = v; });
+        }
+
         // Frequency slider (minutes)
         var freqRect = CloneControl(sliderTemplate, content, "AutoTalk Frequency");
-        PlaceSlider(freqRect, -125f);
+        PlaceSlider(freqRect, -180f);
         frequencyLabel = freqRect.GetComponentInChildren<TMP_Text>(true);
         var freq = freqRect.GetComponent<Slider>();
         if (freq != null)
@@ -395,7 +410,7 @@ public class SusuVoicesMenu : MonoBehaviour
 
         // Voice volume slider
         var volRect = CloneControl(sliderTemplate, content, "Voice Volume");
-        PlaceSlider(volRect, -205f);
+        PlaceSlider(volRect, -260f);
         volumeLabel = volRect.GetComponentInChildren<TMP_Text>(true);
         var vol = volRect.GetComponent<Slider>();
         if (vol != null)
@@ -442,14 +457,14 @@ public class SusuVoicesMenu : MonoBehaviour
         if (volumeLabel != null) volumeLabel.text = $"VOICE VOLUME: {Mathf.RoundToInt(v * 100f)}%";
     }
 
-    static void SetLabel(RectTransform rect, string text)
+    public static void SetLabel(RectTransform rect, string text)
     {
         var label = rect.GetComponentInChildren<TMP_Text>(true);
         if (label != null) label.text = text;
     }
 
     /// <summary>Copies a settings control into our (inactive) window and strips its settings/localisation scripts.</summary>
-    static RectTransform CloneControl(RectTransform template, Transform parent, string name)
+    public static RectTransform CloneControl(RectTransform template, Transform parent, string name)
     {
         var copy = Instantiate(template.gameObject, parent);
         copy.name = name;
@@ -461,7 +476,7 @@ public class SusuVoicesMenu : MonoBehaviour
         return rect;
     }
 
-    static TMP_Text Rebind(RectTransform rect, string text, UnityAction onClick)
+    public static TMP_Text Rebind(RectTransform rect, string text, UnityAction onClick)
     {
         if (rect == null) return null;
         var button = rect.GetComponent<UnityEngine.UI.Button>();
@@ -502,7 +517,7 @@ public class SusuVoicesMenu : MonoBehaviour
         if (labels.TryGetValue(p.id, out var l) && l != null) l.fontStyle &= ~FontStyles.Underline;
     }
 
-    static GameObject FindSceneObject(string name)
+    public static GameObject FindSceneObject(string name)
     {
         foreach (var t in Resources.FindObjectsOfTypeAll<Transform>())
             if (t.name == name && t.gameObject.scene.IsValid()) return t.gameObject;

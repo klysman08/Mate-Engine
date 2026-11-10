@@ -7,12 +7,12 @@ using UnityEngine.Networking;
 
 /// <summary>
 /// Streaming chat client for OpenRouter (OpenAI-compatible /chat/completions).
-/// Created by MateSusuBootstrap when a key is found in .env.
+/// The key and model come from SusuAiSettings (AI window, else .env), so both can change while the app runs.
 /// </summary>
 public class OpenRouterChat : MonoBehaviour
 {
     public const string Endpoint = "https://openrouter.ai/api/v1/chat/completions";
-    public const string DefaultModel = "openai/gpt-4o-mini";
+    public const string DefaultModel = SusuAiSettings.DefaultChatModel;
 
     public static OpenRouterChat Instance { get; private set; }
 
@@ -32,22 +32,24 @@ public class OpenRouterChat : MonoBehaviour
     [Header("Runtime")]
     [SerializeField] bool active;
 
-    string apiKey;
+    string apiKey => SusuAiSettings.OpenRouterKey;
     readonly List<Msg> history = new List<Msg>();
     UnityWebRequest current;
 
     public bool IsActive => active && !string.IsNullOrEmpty(apiKey);
     public bool IsBusy => current != null;
 
-    public void Configure(string key)
+    /// <summary>True when there is a key to chat with (the chat may still be switched off in .env).</summary>
+    public bool HasKey => !string.IsNullOrEmpty(apiKey);
+
+    public void Configure()
     {
-        apiKey = key;
-        model = MateSusuEnv.Get("OPENROUTER_CHAT_MODEL", DefaultModel);
+        model = SusuAiSettings.ChatModel;
         temperature = MateSusuEnv.GetFloat("OPENROUTER_TEMPERATURE", temperature);
         maxTokens = Mathf.RoundToInt(MateSusuEnv.GetFloat("OPENROUTER_MAX_TOKENS", maxTokens));
         active = MateSusuEnv.GetBool("OPENROUTER_CHAT_ENABLED", true);
         language = MateSusuEnv.Get("OPENROUTER_LANGUAGE", language).Trim().ToLowerInvariant();
-        Debug.Log($"[OpenRouter] Chat {(active ? "enabled" : "disabled")} - model '{model}', language '{language}' (config: {MateSusuEnv.LoadedFrom})");
+        Debug.Log($"[OpenRouter] Chat {(active ? "enabled" : "disabled")} - model '{model}', language '{SusuAiSettings.ReplyLanguage}', key {(HasKey ? "found" : "missing")} (config: {MateSusuEnv.LoadedFrom})");
     }
 
     /// <summary>Persona from Resources plus the language rule. Falls back to the given prompt if the persona is missing.</summary>
@@ -55,7 +57,7 @@ public class OpenRouterChat : MonoBehaviour
     {
         var persona = Resources.Load<TextAsset>(personaResource);
         string basePrompt = persona != null ? persona.text.Trim() : fallbackPrompt;
-        string rule = LanguageRule(language);
+        string rule = LanguageRule(SusuAiSettings.ReplyLanguage); // .env value unless changed in the AI window
         string prompt = string.IsNullOrWhiteSpace(basePrompt) ? rule : basePrompt + "\n\nLanguage:\n- " + rule;
         var tts = OpenRouterTTS.Instance;
         if (tts != null && tts.speakReplies && tts.UsesAudioTags) prompt += "\n\n" + VoiceRule;
@@ -107,7 +109,8 @@ public class OpenRouterChat : MonoBehaviour
     /// </summary>
     public void Chat(string message, string systemPrompt, Action<string> onPartial, Action<string> onComplete, Action<string> onError = null)
     {
-        if (!IsActive) { onError?.Invoke("OpenRouter is not configured."); return; }
+        if (!HasKey) { onError?.Invoke("No OpenRouter API key yet. Add one in the AI settings window."); return; }
+        if (!IsActive) { onError?.Invoke("Chat is switched off (OPENROUTER_CHAT_ENABLED in .env)."); return; }
         Cancel();
         StartCoroutine(ChatRoutine(message, systemPrompt, onPartial, onComplete, onError));
     }
@@ -127,6 +130,7 @@ public class OpenRouterChat : MonoBehaviour
         for (int i = start; i < history.Count; i++) messages.Add(history[i]);
         messages.Add(new Msg("user", message));
 
+        model = SusuAiSettings.ChatModel; // may have been changed in the AI window since the last message
         var body = new ChatRequest
         {
             model = model,

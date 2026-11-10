@@ -23,3 +23,14 @@ Unity Humanoid and played through `SusuClipPlayer`.
 - **Doodle Dance** by VRSuya. Its user agreement allows personal use only and forbids redistributing the data
   (original or modified) without permission and using it in commercial games/videos, so this folder is listed in
   `.gitignore` and stays on the owner's machine. The `doodle` motion is skipped automatically where the file is missing.
+
+## Syukusei/ (not in the repository)
+- **粛清ダンスモーション v1.10** (Syukusei dance, parts A and B) by アンテナショップ【ねここや】 (Necocoya).
+- Its ReadMe asks for personal use only and forbids claiming authorship, defamatory use, paid redistribution and use in
+  games meant for sale, so this folder is listed in `.gitignore`. The clips are slow by design; they are played at 1.33x as
+  the ReadMe suggests. Used as the `syukusei_a` / `syukusei_b` dances (see `SusuDances`), skipped where the files are missing.
+
+## Poses/Chiu/ (not in the repository)
+- **Chiu 2026-03 pose set**: single-frame humanoid pose clips. No licence text came with the files, so the folder is
+  listed in `.gitignore` until its terms are known. Used as the `pose_*` motions (held for about three seconds).
+
