@@ -16,7 +16,7 @@ using UnityEngine;
 /// </summary>
 public static class SusuReleaseBuild
 {
-    public const string Version = "1.0.0";
+    public const string Version = "1.1.0";
     const string ExeName = "MateSusu.exe";
 
     [MenuItem("Tools/MateSusu/Build Windows Release")]
