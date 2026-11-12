@@ -29,6 +29,7 @@ public class SusuChatWindow : MonoBehaviour
     static readonly Color MineColor = new Color(0.47f, 0.37f, 0.98f, 0.92f);
     static readonly Color HersColor = new Color(1f, 1f, 1f, 0.11f);
     static readonly Color ErrorColor = new Color(0.95f, 0.35f, 0.4f, 0.35f);
+    static readonly Color WarningColor = new Color(1f, 0.72f, 0.2f, 0.32f); // quota and other notices
     static readonly Color ListeningColor = new Color(1f, 0.3f, 0.36f, 1f);
     static readonly Color BusyColor = new Color(1f, 0.78f, 0.25f, 1f);
     static readonly Color IdleColor = new Color(1f, 1f, 1f, 0.9f);
@@ -76,6 +77,7 @@ public class SusuChatWindow : MonoBehaviour
             mic.Problem -= Flash;
         }
         SusuAiSettings.Changed -= UpdateEmptyHint;
+        GeminiQuota.Reached -= OnQuotaReached;
         if (Instance == this) Instance = null;
     }
 
@@ -209,8 +211,20 @@ public class SusuChatWindow : MonoBehaviour
 
     void Fail(Message m, string error)
     {
-        if (m.background != null) m.background.color = ErrorColor;
+        bool quota = SusuChat.Instance != null && SusuChat.Instance.LastErrorWasQuota;
+        if (m.background != null) m.background.color = quota ? WarningColor : ErrorColor;
         SetText(m, error);
+    }
+
+    /// <summary>Gemini voice or microphone ran out of free quota: tell the user in the chat (the chat's own quota
+    /// errors already show up in the reply bubble).</summary>
+    void OnQuotaReached(GeminiQuota.Service service, string message)
+    {
+        if (service == GeminiQuota.Service.Chat || window == null) return;
+        var m = Add(message, false);
+        if (m.background != null) m.background.color = WarningColor;
+        stickToBottom = true;
+        if (!IsOpen) Flash(message);
     }
 
     /// <summary>Forgets the conversation: empties the window and the context sent to the model.</summary>
@@ -463,6 +477,7 @@ public class SusuChatWindow : MonoBehaviour
             mic.Problem += Flash;
         }
         SusuAiSettings.Changed += UpdateEmptyHint;
+        GeminiQuota.Reached += OnQuotaReached;
         UpdateEmptyHint();
 
         Debug.Log("[SusuChat] Chat window ready.");

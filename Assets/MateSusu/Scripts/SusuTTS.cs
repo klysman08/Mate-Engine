@@ -283,6 +283,11 @@ public class SusuTTS : MonoBehaviour
                     geminiLegacyShape = true;
                     continue;
                 }
+                if (GeminiQuota.IsQuotaError(code, answer))
+                {
+                    onError?.Invoke(GeminiQuota.Report(GeminiQuota.Service.Voice, geminiModel, answer));
+                    yield break;
+                }
                 string err = $"TTS failed ({code}): {Short(answer)}";
                 Debug.LogWarning("[Gemini TTS] " + err);
                 onError?.Invoke(err);

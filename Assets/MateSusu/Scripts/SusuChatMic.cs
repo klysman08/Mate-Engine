@@ -241,7 +241,12 @@ public class SusuChatMic : MonoBehaviour
             request = null;
 
             string body = req.downloadHandler.text;
-            if (req.result != UnityWebRequest.Result.Success) { onError?.Invoke($"{req.responseCode} {req.error} {Short(body)}"); yield break; }
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                if (GeminiQuota.IsQuotaError(req.responseCode, body)) GeminiQuota.Report(GeminiQuota.Service.Microphone, geminiModel, body);
+                onError?.Invoke($"{req.responseCode} {req.error} {Short(body)}");
+                yield break;
+            }
             GeminiReply reply = null;
             try { reply = JsonUtility.FromJson<GeminiReply>(body); } catch (Exception) { }
             if (reply?.candidates == null || reply.candidates.Length == 0 || reply.candidates[0].content?.parts == null)

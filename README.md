@@ -1,8 +1,13 @@
 # MateSusu
 
-**MateSusu** is a fork of [Mate Engine](https://github.com/shinyflvre/Mate-Engine) that turns the desktop pet into
-**Susu**, a little companion who talks (in Japanese, with a real voice), chats with you through an LLM, listens
-to your microphone and moves around with ready-made humanoid animations.
+**MateSusu** turns the [Mate Engine](https://github.com/shinyflvre/Mate-Engine) desktop pet into **Susu**, a little
+companion who lives on your screen, talks in Japanese with a real voice, chats with you through Google Gemini,
+listens to your microphone and moves with ready-made animations.
+
+Susu is the study buddy from **[Susume Nihongo](https://susumenihongo.app/)** (進め日本語), the free Japanese learning
+app. MateSusu brings her to your desktop: she keeps you company while you work, teaches you a phrase, quizzes you,
+corrects your Japanese gently and reminds you to keep going. Learn with the Study Book, flashcards and quizzes on
+Susume Nihongo, then practise every day with Susu on your desktop.
 
 **[Download the latest Windows release](https://github.com/klysman08/Mate-Engine/releases/latest)** · everything
 below this section is the original Mate Engine README.
@@ -13,12 +18,23 @@ below this section is the original Mate Engine README.
 | **Voices** | **Auto-talk text over her head** |
 | ![Voices window](docs/matesusu/voices.png) | ![Japanese text over Susu's head](docs/matesusu/balloon.png) |
 
-### What is new
+### Your Japanese study buddy
+
+- **Ask about any word or phrase** and Susu gives you the expression, its reading, the meaning and a tiny example.
+- **Write to her in Japanese**: she praises the try, then gives you the corrected sentence and a short reason.
+- **"Quiz me!"**: one question at a time (vocabulary, kana, kanji, grammar), with cheers or a gentle correction.
+- She keeps it at your level (JLPT N5–N4 by default), mixes in real-life usage and culture, and points you to the
+  right part of Susume Nihongo (Study Book, Flashcards, quizzes, Sensei, JLPT practice) when it helps.
+- A **Japanese phrase deck** in the Voices window: each phrase is spoken with its card (phrase, romaji, meaning).
+- Choose the language **Susu replies in**: write in Portuguese or English and get the answer in Japanese, or let her
+  follow you.
+- The same free **Gemini API key** from Google AI Studio works for both Susume Nihongo and MateSusu.
+
+### Features
 
 **Voice lines** (radial menu → *Voices*)
 - 120+ pre-recorded Japanese lines in one ElevenLabs voice: greetings, breaks and health, study and work, cheering,
-  sweet talk, stories, "About Susu", plus a **Japanese phrase deck** (phrase, romaji and meaning shown as a card).
-- Every line has a matching body motion, and its words are shown as a subtitle in the window.
+  sweet talk, stories, "About Susu" and the Japanese phrase deck, each with matching motions and a subtitle.
 - **Susu talks by herself** every few minutes, and what she says follows the clock: morning, midday, afternoon,
   evening and night favour different topics; meals, greetings and good-nights are said once a day; opening the app
   after a while gets a "good morning" / "welcome back" / "long time no see"; she talks less after midnight.
@@ -26,41 +42,36 @@ below this section is the original Mate Engine README.
 - Lines she says by herself also float **over her head** in Japanese, with a soft shadow.
 
 **Chat** (radial menu → *Chat*)
-- A new chat window: bubbles, a text box, **microphone** (speak, it stops on silence, transcribes and sends) and a
+- Chat window with bubbles, a text box, a **microphone** (speak, it stops on silence, transcribes and sends) and a
   **new chat** button that forgets the conversation.
-- Replies come from **Google Gemini** (free API key from Google AI Studio, no credit card) and are read aloud with
-  Susu's voice. The local LLM was removed.
+- Replies come from **Google Gemini** (free API key, no credit card) and are read aloud with Susu's voice.
 
 **AI settings** (radial menu → *AI*)
 - Paste your **Gemini** and **ElevenLabs** API keys in the app (stored encrypted for your Windows user).
-- Pick the **chat model** (Gemini 3.8 Flash, 3.6 Flash, 3.5 Flash-Lite, 3.1 Flash-Lite, all on the free tier) and the
-  **voice** for replies: ElevenLabs v4 / v4 Turbo (Susu's own voice, default) or Gemini TTS (free) with a choice of
-  Gemini voices.
-- Fix the language **Susu replies in** (write in Portuguese or English, she answers in Japanese) and the language
-  you speak into the microphone.
+- Pick the **chat model** (Gemini 3.8 Flash, 3.6 Flash, 3.5 Flash-Lite, 3.1 Flash-Lite, all on the free tier).
+- Pick the **voice** for replies: ElevenLabs v4 / v4 Turbo (Susu's own voice, default) or **Gemini TTS** (free) with
+  a choice of Gemini voices.
+- Set the language Susu replies in and the language you speak into the microphone.
 - Switch spoken replies, the text over her head and idle motions on or off.
-
-**Models** (radial menu → *Models*)
-- Every VRM in the `SusuModels` folder shows up ready in the Models menu on first launch.
-
-**Custom dances**
-- While Susu performs a custom dance (Dance Player) she neither talks nor plays her own motions, so the dance is
-  never interrupted.
 
 **Motions**
 - Ready-made humanoid clips (KAWAII ANIMATIONS 100, Rokoko mocap, Quaternius UAL2, EmoteBox) played on top of the
   Mate Engine animator.
 - Every voice line has one or more matching motions: a talking gesture followed by a reaction (bow, shy, laugh,
   thumbs up, cheer...).
-- 30 calm **idle motions** (breathing, looking around, stretching, crossing her legs, cute poses...) between lines,
-  so she does not loop the same few idles.
+- Calm **idle motions** (breathing, looking around, stretching, crossing her legs, cute poses...) between lines.
+- **Custom dances** are never interrupted: while one plays, Susu neither talks nor plays her own motions.
+
+**Models** (radial menu → *Settings* → *Models*)
+- Every VRM in the `SusuModels` folder shows up ready in the Models menu on first launch.
 
 ### Setup
 
 1. Download the zip from [Releases](https://github.com/klysman08/Mate-Engine/releases/latest), unzip it and run `MateSusu.exe`.
 2. Right-click the avatar → **AI** and paste your keys:
-   - [Gemini](https://aistudio.google.com/apikey) — chat (free), and optionally the Gemini voices and microphone.
-   - [ElevenLabs](https://elevenlabs.io/app/settings/api-keys) — Susu's voice in chat and microphone transcription.
+   - [Gemini](https://aistudio.google.com/apikey) — chat (free, no credit card), and optionally the Gemini voices
+     and microphone. If you already use Susume Nihongo with Gemini, it is the same key.
+   - [ElevenLabs](https://elevenlabs.io/app/settings/api-keys) — Susu's own voice in chat and microphone transcription.
    The pre-recorded voice lines work without any key.
 3. Optional: rename `env.example.txt` to `.env` next to the exe to set everything in a file (see [`.env.example`](.env.example)).
 
@@ -68,14 +79,16 @@ below this section is the original Mate Engine README.
 
 Unity **6000.2.6f2**. Open the project, then **Tools → MateSusu → Build Motion Library** and
 **Tools → MateSusu → Build Windows Release** (writes `Builds/MateSusu-v<version>/`).
-Voice lines are generated with `Tools/MateSusu/generate_voice_lines_elevenlabs.py`.
+Voice lines are generated with `Tools/MateSusu/generate_voice_lines_elevenlabs.py`. Susu's chat personality is in
+[`Assets/MateSusu/Resources/SusuPersona.txt`](Assets/MateSusu/Resources/SusuPersona.txt).
 
 ### Credits and licences
 
 - Mate Engine by [shinyflvre](https://github.com/shinyflvre/Mate-Engine) — Mixed GNU AGPL v3 & MateProv2 licence
   ([LICENSE.md](LICENSE.md)). MateSusu is free, non-commercial and its full source is in this repository.
 - Animation credits: [`Assets/MateSusu/Animations/CREDITS.md`](Assets/MateSusu/Animations/CREDITS.md). Packs whose
-  licences allow personal use only (VRSuya, Chiu poses) are not in the repository or in the release.
+  licences allow personal use only (VRSuya, Chiu poses) are not in the repository or in the release; the KAWAII
+  ANIMATIONS 100 source files (Unity Asset Store) are not in the repository either, only inside the release build.
 
 ---
 

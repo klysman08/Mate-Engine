@@ -36,6 +36,8 @@ public class SusuChat : MonoBehaviour
     /// <summary>True when there is a key to chat with.</summary>
     public bool HasKey => !string.IsNullOrEmpty(ApiKey);
     public bool IsBusy => current != null;
+    /// <summary>True when the last failed message failed because a Gemini quota was used up.</summary>
+    public bool LastErrorWasQuota { get; private set; }
 
     void Awake()
     {
@@ -106,6 +108,7 @@ public class SusuChat : MonoBehaviour
     IEnumerator ChatRoutine(string message, string systemPrompt, Action<string> onPartial, Action<string> onComplete, Action<string> onError)
     {
         model = SusuAiSettings.ChatModel; // may have been changed in the AI window since the last message
+        LastErrorWasQuota = false;
 
         var contents = new List<OutContent>();
         int start = Mathf.Max(0, history.Count - historyLimit);
@@ -144,6 +147,12 @@ public class SusuChat : MonoBehaviour
             if (req.result != UnityWebRequest.Result.Success || handler.Error != null)
             {
                 string err = handler.Error ?? ExtractError(handler.RawText) ?? req.error;
+                if (GeminiQuota.IsQuotaError(req.responseCode, handler.RawText + " " + handler.Error))
+                {
+                    LastErrorWasQuota = true;
+                    onError?.Invoke(GeminiQuota.Report(GeminiQuota.Service.Chat, model, handler.RawText + " " + handler.Error));
+                    yield break;
+                }
                 Debug.LogWarning($"[SusuChat] Gemini failed ({req.responseCode}): {err}");
                 onError?.Invoke(err);
                 yield break;
