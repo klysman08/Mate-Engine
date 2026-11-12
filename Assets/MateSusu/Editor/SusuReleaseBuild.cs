@@ -90,7 +90,7 @@ public static class SusuReleaseBuild
         {
             string models = Path.Combine(outDir, SusuModels.FolderName);
             Directory.CreateDirectory(models);
-            foreach (var f in Directory.GetFiles(SusuModels.FolderName, "*.vrm"))
+            foreach (var f in Directory.GetFiles(SusuModels.FolderName).Where(f => f.EndsWith(".vrm") || f.EndsWith(".md")))
                 File.Copy(f, Path.Combine(models, Path.GetFileName(f)), true);
         }
         File.WriteAllText(Path.Combine(outDir, "README.txt"),
