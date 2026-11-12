@@ -57,7 +57,7 @@ public class SusuSpeechBalloon : MonoBehaviour
         if (string.IsNullOrEmpty(text)) return;
 
         Build();
-        label.text = OpenRouterTTS.StripAudioTags(text);
+        label.text = SusuTTS.StripAudioTags(text);
         showingId = p.id;
         target = 1f;
         hideAt = -1f;

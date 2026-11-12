@@ -23,28 +23,39 @@ public static class SusuAiSettings
         public Option(string id, string label) { this.id = id; this.label = label; }
     }
 
-    public const string DefaultChatModel = "openai/gpt-4o-mini";
+    public const string DefaultChatModel = "gemini-3.8-flash";
+    public const string DefaultGeminiTtsModel = "gemini-3.8-flash-tts";
+    public const string DefaultGeminiVoice = "Leda";
 
-    /// <summary>Chat models on OpenRouter worth choosing for a talking companion (checked against its model list, Nov 2026).</summary>
+    /// <summary>Gemini chat models available on the free tier of Google AI Studio (checked against its docs, Nov 2026).</summary>
     public static readonly Option[] ChatModels =
     {
-        new Option("openai/gpt-6-luna",             "GPT-6 Luna - fast, low cost"),
-        new Option("anthropic/claude-haiku-5.5",    "Claude Haiku 5.5 - fast, natural character"),
-        new Option("google/gemini-3.8-flash",       "Gemini 3.8 Flash - fast, strong Japanese"),
-        new Option("deepseek/deepseek-v4.1-flash",  "DeepSeek V4.1 Flash - cheapest"),
-        new Option("anthropic/claude-sonnet-5.5",   "Claude Sonnet 5.5 - best personality"),
-        new Option("openai/gpt-6.1-terra",          "GPT-6.1 Terra - smart all-rounder"),
-        new Option("x-ai/grok-4.7",                 "Grok 4.7 - playful, less filtered"),
-        new Option("openai/gpt-4o-mini",            "GPT-4o mini - classic"),
+        new Option("gemini-3.8-flash",      "Gemini 3.8 Flash - smartest, free"),
+        new Option("gemini-3.6-flash",      "Gemini 3.6 Flash - stable, free"),
+        new Option("gemini-3.5-flash-lite", "Gemini 3.5 Flash-Lite - fastest, free"),
+        new Option("gemini-3.1-flash-lite", "Gemini 3.1 Flash-Lite - light, free"),
     };
 
     /// <summary>Voices for chat replies: "provider:model". The pre-recorded voice lines are not affected.</summary>
     public static readonly Option[] VoiceModels =
     {
-        new Option("elevenlabs:eleven_v4",          "ElevenLabs v4 - most expressive"),
-        new Option("elevenlabs:eleven_v4_turbo",    "ElevenLabs v4 Turbo - faster replies"),
-        new Option("openrouter:fish-audio/drama-3", "Fish Audio Drama 3 - via OpenRouter"),
-        new Option("openrouter:hexgrad/kokoro-82m", "Kokoro 82M - via OpenRouter, cheapest"),
+        new Option("elevenlabs:eleven_v4",              "ElevenLabs v4 - Susu's voice (default)"),
+        new Option("elevenlabs:eleven_v4_turbo",        "ElevenLabs v4 Turbo - faster replies"),
+        new Option("gemini:gemini-3.8-flash-tts",       "Gemini 3.8 Flash TTS - free"),
+        new Option("gemini:gemini-3.8-flash-lite-tts",  "Gemini 3.8 Flash-Lite TTS - free, faster"),
+    };
+
+    /// <summary>A few of Gemini's 30 prebuilt voices that suit Susu.</summary>
+    public static readonly Option[] GeminiVoices =
+    {
+        new Option("Leda",         "Leda - youthful"),
+        new Option("Zephyr",       "Zephyr - bright"),
+        new Option("Laomedeia",    "Laomedeia - upbeat"),
+        new Option("Autonoe",      "Autonoe - bright"),
+        new Option("Aoede",        "Aoede - breezy"),
+        new Option("Achernar",     "Achernar - soft"),
+        new Option("Vindemiatrix", "Vindemiatrix - gentle"),
+        new Option("Sulafat",      "Sulafat - warm"),
     };
 
     // ---------- Chat ----------
@@ -52,19 +63,20 @@ public static class SusuAiSettings
     /// <summary>Language Susu answers in: "auto" (follows the user: English or Japanese), "en" or "ja".</summary>
     public static string ReplyLanguage
     {
-        get => NormalizeReply(GetString("ReplyLanguage", MateSusuEnv.Get("OPENROUTER_LANGUAGE", "auto")));
+        get => NormalizeReply(GetString("ReplyLanguage", MateSusuEnv.GetFirst("SUSU_REPLY_LANGUAGE", "OPENROUTER_LANGUAGE") ?? "auto"));
         set => SetString("ReplyLanguage", NormalizeReply(value));
     }
 
-    /// <summary>OpenRouter model id used for chat.</summary>
+    /// <summary>Gemini model id used for chat.</summary>
     public static string ChatModel
     {
         get
         {
-            string v = (GetString("ChatModel", MateSusuEnv.Get("OPENROUTER_CHAT_MODEL", DefaultChatModel)) ?? "").Trim();
-            return v.Length > 0 ? v : DefaultChatModel;
+            // Saved by older versions as an OpenRouter id ("openai/gpt-4o-mini"): no longer valid.
+            string v = (GetString("GeminiChatModel", MateSusuEnv.Get("GEMINI_CHAT_MODEL", DefaultChatModel)) ?? "").Trim();
+            return v.Length > 0 && !v.Contains("/") ? v : DefaultChatModel;
         }
-        set => SetString("ChatModel", (value ?? "").Trim());
+        set => SetString("GeminiChatModel", (value ?? "").Trim());
     }
 
     // ---------- Voice ----------
@@ -72,26 +84,36 @@ public static class SusuAiSettings
     /// <summary>Chat replies are read aloud with Susu's voice.</summary>
     public static bool SpeakReplies
     {
-        get => GetBool("SpeakReplies", MateSusuEnv.GetBool("OPENROUTER_TTS_ENABLED", true));
+        get => GetBool("SpeakReplies", MateSusuEnv.GetBool("SUSU_SPEAK_REPLIES", MateSusuEnv.GetBool("OPENROUTER_TTS_ENABLED", true)));
         set => SetBool("SpeakReplies", value);
     }
 
-    /// <summary>"elevenlabs:&lt;model&gt;" or "openrouter:&lt;model&gt;" for chat replies.</summary>
+    /// <summary>"elevenlabs:&lt;model&gt;" or "gemini:&lt;model&gt;" for chat replies. ElevenLabs is the default.</summary>
     public static string VoiceModel
     {
         get
         {
             string v = (GetString("VoiceModel", "") ?? "").Trim();
-            if (v.IndexOf(':') > 0) return v;
+            if (v.StartsWith("elevenlabs:") || v.StartsWith("gemini:")) return v; // older "openrouter:" choices fall through
 
-            // From .env: SUSU_TTS_PROVIDER (default: ElevenLabs when it has a key) and that provider's model.
-            bool hasEleven = !string.IsNullOrEmpty(ElevenLabsKey);
-            string provider = MateSusuEnv.Get("SUSU_TTS_PROVIDER", hasEleven ? "elevenlabs" : "openrouter").Trim().ToLowerInvariant();
-            if (provider.StartsWith("eleven"))
-                return "elevenlabs:" + (MateSusuEnv.GetFirst("ELEVENLABS_CHAT_MODEL", "ELEVENLABS_MODEL") ?? "eleven_v4").Trim();
-            return "openrouter:" + MateSusuEnv.Get("OPENROUTER_TTS_MODEL", "fish-audio/drama-3").Trim();
+            // From .env: SUSU_TTS_PROVIDER (elevenlabs | gemini) and that provider's model.
+            string provider = MateSusuEnv.Get("SUSU_TTS_PROVIDER", "elevenlabs").Trim().ToLowerInvariant();
+            if (provider.StartsWith("gemini"))
+                return "gemini:" + MateSusuEnv.Get("GEMINI_TTS_MODEL", DefaultGeminiTtsModel).Trim();
+            return "elevenlabs:" + (MateSusuEnv.GetFirst("ELEVENLABS_CHAT_MODEL", "ELEVENLABS_MODEL") ?? "eleven_v4").Trim();
         }
         set => SetString("VoiceModel", (value ?? "").Trim());
+    }
+
+    /// <summary>Prebuilt Gemini voice used when the chat voice is Gemini.</summary>
+    public static string GeminiVoice
+    {
+        get
+        {
+            string v = (GetString("GeminiVoice", MateSusuEnv.Get("GEMINI_TTS_VOICE", DefaultGeminiVoice)) ?? "").Trim();
+            return v.Length > 0 ? v : DefaultGeminiVoice;
+        }
+        set => SetString("GeminiVoice", (value ?? "").Trim());
     }
 
     /// <summary>Language the user speaks into the microphone: "" (detect), "pt", "en", "ja".</summary>
@@ -121,21 +143,22 @@ public static class SusuAiSettings
 
     public enum KeySource { None, Env, Saved }
 
-    static string openRouterKey, elevenLabsKey; // decrypted once, kept in memory
+    static string geminiKey, elevenLabsKey; // decrypted once, kept in memory
     static bool keysLoaded;
 
-    /// <summary>OpenRouter key (chat, and OpenRouter voices): the one saved in the app, else .env.</summary>
-    public static string OpenRouterKey
+    /// <summary>Gemini key from Google AI Studio (chat, Gemini voices, microphone fallback): the one saved in the
+    /// app, else .env.</summary>
+    public static string GeminiKey
     {
         get
         {
             LoadKeys();
-            return !string.IsNullOrEmpty(openRouterKey) ? openRouterKey : MateSusuEnv.GetFirst("OPENROUTER_API_KEY", "API_KEY") ?? "";
+            return !string.IsNullOrEmpty(geminiKey) ? geminiKey : MateSusuEnv.GetFirst("GEMINI_API_KEY", "GOOGLE_API_KEY") ?? "";
         }
-        set { LoadKeys(); openRouterKey = SaveKey("OpenRouterKey", value); Changed?.Invoke(); }
+        set { LoadKeys(); geminiKey = SaveKey("GeminiKey", value); Changed?.Invoke(); }
     }
 
-    /// <summary>ElevenLabs key (voice and microphone transcription): the one saved in the app, else .env.</summary>
+    /// <summary>ElevenLabs key (Susu's voice and microphone transcription): the one saved in the app, else .env.</summary>
     public static string ElevenLabsKey
     {
         get
@@ -146,9 +169,9 @@ public static class SusuAiSettings
         set { LoadKeys(); elevenLabsKey = SaveKey("ElevenLabsKey", value); Changed?.Invoke(); }
     }
 
-    public static KeySource OpenRouterKeySource
+    public static KeySource GeminiKeySource
     {
-        get { LoadKeys(); return !string.IsNullOrEmpty(openRouterKey) ? KeySource.Saved : OpenRouterKey.Length > 0 ? KeySource.Env : KeySource.None; }
+        get { LoadKeys(); return !string.IsNullOrEmpty(geminiKey) ? KeySource.Saved : GeminiKey.Length > 0 ? KeySource.Env : KeySource.None; }
     }
 
     public static KeySource ElevenLabsKeySource
@@ -160,7 +183,7 @@ public static class SusuAiSettings
     {
         if (keysLoaded) return;
         keysLoaded = true;
-        openRouterKey = Unprotect(PlayerPrefs.GetString(Prefix + "OpenRouterKey", ""));
+        geminiKey = Unprotect(PlayerPrefs.GetString(Prefix + "GeminiKey", ""));
         elevenLabsKey = Unprotect(PlayerPrefs.GetString(Prefix + "ElevenLabsKey", ""));
     }
 

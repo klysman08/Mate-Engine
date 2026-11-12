@@ -296,24 +296,24 @@ namespace LLMUnitySamples
 
         // ---------- MateSusu: OpenRouter backend ----------
 
-        bool UseOpenRouter => OpenRouterChat.Instance != null && OpenRouterChat.Instance.IsActive;
+        bool UseOpenRouter => SusuChat.Instance != null && SusuChat.Instance.HasKey;
 
         void ChatWithOpenRouter(string message, Bubble aiBubble)
         {
-            string systemPrompt = OpenRouterChat.Instance.BuildSystemPrompt(llmCharacter != null ? llmCharacter.prompt : null);
+            string systemPrompt = SusuChat.Instance.BuildSystemPrompt(llmCharacter != null ? llmCharacter.prompt : null);
 
-            OpenRouterChat.Instance.Chat(
+            SusuChat.Instance.Chat(
                 message,
                 systemPrompt,
-                partial => { aiBubble.SetText(OpenRouterTTS.StripAudioTags(partial)); layoutDirty = true; },
+                partial => { aiBubble.SetText(SusuTTS.StripAudioTags(partial)); layoutDirty = true; },
                 reply =>
                 {
-                    aiBubble.SetText(OpenRouterTTS.StripAudioTags(reply));
+                    aiBubble.SetText(SusuTTS.StripAudioTags(reply));
                     layoutDirty = true;
                     if (streamAudioSource != null && streamAudioSource.isPlaying)
                         StartCoroutine(FadeOutStreamAudio());
 
-                    var tts = OpenRouterTTS.Instance;
+                    var tts = SusuTTS.Instance;
                     if (tts != null && tts.speakReplies)
                     {
                         // keep the talking animation while the voice plays
@@ -325,7 +325,7 @@ namespace LLMUnitySamples
                 },
                 error =>
                 {
-                    aiBubble.SetText("[OpenRouter] " + error);
+                    aiBubble.SetText("[Gemini] " + error);
                     layoutDirty = true;
                     if (avatarAnimator != null) avatarAnimator.SetBool(isTalkingHash, false);
                     if (streamAudioSource != null && streamAudioSource.isPlaying)
@@ -363,8 +363,8 @@ namespace LLMUnitySamples
 
         public void CancelRequests()
         {
-            if (OpenRouterChat.Instance != null) OpenRouterChat.Instance.Cancel();
-            if (OpenRouterTTS.Instance != null) OpenRouterTTS.Instance.Stop();
+            if (SusuChat.Instance != null) SusuChat.Instance.Cancel();
+            if (SusuTTS.Instance != null) SusuTTS.Instance.Stop();
             llmCharacter.CancelRequests();
             AllowInput();
         }

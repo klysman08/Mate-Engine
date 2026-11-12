@@ -9,8 +9,8 @@ using UnityEngine.Networking;
 /// Microphone for the chat: records what the user says and turns it into text. Recording stops by itself
 /// after a short silence (or when toggled again). The chat window owns the button and decides what to do
 /// with the text. Speech-to-text uses ElevenLabs Scribe when there is an ElevenLabs key, otherwise an
-/// audio-capable OpenRouter model. .env: SUSU_STT_PROVIDER (elevenlabs | openrouter), ELEVENLABS_STT_MODEL,
-/// OPENROUTER_STT_MODEL, SUSU_MIC_DEVICE; the spoken language is set in the AI window (or SUSU_STT_LANGUAGE).
+/// Gemini model (free AI Studio key). .env: SUSU_STT_PROVIDER (elevenlabs | gemini), ELEVENLABS_STT_MODEL,
+/// GEMINI_STT_MODEL, SUSU_MIC_DEVICE; the spoken language is set in the AI window (or SUSU_STT_LANGUAGE).
 /// </summary>
 public class SusuChatMic : MonoBehaviour
 {
@@ -40,7 +40,7 @@ public class SusuChatMic : MonoBehaviour
     /// <summary>Short message for the user: no microphone, nothing heard, transcription failed.</summary>
     public event Action<string> Problem;
 
-    string elevenModel, openRouterModel, device, wantedProvider;
+    string elevenModel, geminiModel, device, wantedProvider;
 
     AudioClip recording;
     float startedAt, lastVoiceAt;
@@ -49,11 +49,11 @@ public class SusuChatMic : MonoBehaviour
     UnityWebRequest request;
 
     string ElevenKey => SusuAiSettings.ElevenLabsKey;
-    string OpenRouterKey => SusuAiSettings.OpenRouterKey;
-    bool UseEleven => ElevenKey.Length > 0 && (wantedProvider.StartsWith("eleven") || OpenRouterKey.Length == 0);
+    string GeminiKey => SusuAiSettings.GeminiKey;
+    bool UseEleven => ElevenKey.Length > 0 && (wantedProvider.StartsWith("eleven") || GeminiKey.Length == 0);
 
     /// <summary>True when there is a key for speech-to-text.</summary>
-    public bool Available => ElevenKey.Length > 0 || OpenRouterKey.Length > 0;
+    public bool Available => ElevenKey.Length > 0 || GeminiKey.Length > 0;
 
     void Awake()
     {
@@ -61,12 +61,12 @@ public class SusuChatMic : MonoBehaviour
         Instance = this;
 
         elevenModel = MateSusuEnv.Get("ELEVENLABS_STT_MODEL", "scribe_v1");
-        openRouterModel = MateSusuEnv.Get("OPENROUTER_STT_MODEL", "google/gemini-2.5-flash");
+        geminiModel = MateSusuEnv.Get("GEMINI_STT_MODEL", "gemini-3.5-flash-lite");
         wantedProvider = MateSusuEnv.Get("SUSU_STT_PROVIDER", "elevenlabs").Trim().ToLowerInvariant();
         device = MateSusuEnv.Get("SUSU_MIC_DEVICE", "");
         if (string.IsNullOrWhiteSpace(device)) device = null; // Windows default microphone
 
-        if (Available) Debug.Log($"[SusuMic] Speech-to-text: {(UseEleven ? "ElevenLabs " + elevenModel : "OpenRouter " + openRouterModel)}");
+        if (Available) Debug.Log($"[SusuMic] Speech-to-text: {(UseEleven ? "ElevenLabs " + elevenModel : "Gemini " + geminiModel)}");
     }
 
     void OnDestroy()
@@ -112,7 +112,7 @@ public class SusuChatMic : MonoBehaviour
         if (Microphone.devices.Length == 0) { Debug.LogWarning("[SusuMic] No microphone found."); Problem?.Invoke("No microphone found"); return; }
 
         // Her own voice would be picked up by the microphone.
-        if (OpenRouterTTS.Instance != null && OpenRouterTTS.Instance.IsSpeaking) OpenRouterTTS.Instance.Stop();
+        if (SusuTTS.Instance != null && SusuTTS.Instance.IsSpeaking) SusuTTS.Instance.Stop();
 
         recording = Microphone.Start(device, false, maxSeconds, SampleRate);
         if (recording == null) { Debug.LogWarning("[SusuMic] Could not start the microphone."); Problem?.Invoke("Microphone unavailable"); return; }
@@ -187,7 +187,7 @@ public class SusuChatMic : MonoBehaviour
     public void Transcribe(byte[] wav, Action<string> onText, Action<string> onError)
     {
         if (!Available) { onError?.Invoke("No speech-to-text key"); return; }
-        StartCoroutine(UseEleven ? ElevenRoutine(wav, onText, onError) : OpenRouterRoutine(wav, onText, onError));
+        StartCoroutine(UseEleven ? ElevenRoutine(wav, onText, onError) : GeminiRoutine(wav, onText, onError));
     }
 
     IEnumerator ElevenRoutine(byte[] wav, Action<string> onText, Action<string> onError)
@@ -218,25 +218,23 @@ public class SusuChatMic : MonoBehaviour
         }
     }
 
-    IEnumerator OpenRouterRoutine(byte[] wav, Action<string> onText, Action<string> onError)
+    IEnumerator GeminiRoutine(byte[] wav, Action<string> onText, Action<string> onError)
     {
         string language = SusuAiSettings.MicLanguage;
         string hint = language.Length > 0 ? $" The speech is in language '{language}'." : "";
-        var json = new StringBuilder();
-        json.Append("{\"model\":").Append(Quote(openRouterModel)).Append(",\"temperature\":0,\"messages\":[{\"role\":\"user\",\"content\":[");
-        json.Append("{\"type\":\"text\",\"text\":").Append(Quote(
+        var json = new StringBuilder("{\"contents\":[{\"role\":\"user\",\"parts\":[");
+        json.Append("{\"text\":").Append(Quote(
             "Transcribe this audio exactly as spoken, in the language it is spoken in. Reply with the transcription only: " +
             "no quotes, no comments, no translation. If there is no speech, reply with nothing." + hint)).Append("},");
-        json.Append("{\"type\":\"input_audio\",\"input_audio\":{\"data\":\"").Append(Convert.ToBase64String(wav)).Append("\",\"format\":\"wav\"}}");
+        json.Append("{\"inline_data\":{\"mime_type\":\"audio/wav\",\"data\":\"").Append(Convert.ToBase64String(wav)).Append("\"}}");
         json.Append("]}]}");
 
-        using (var req = new UnityWebRequest(OpenRouterChat.Endpoint, UnityWebRequest.kHttpVerbPOST))
+        using (var req = new UnityWebRequest(SusuChat.ApiRoot + UnityWebRequest.EscapeURL(geminiModel) + ":generateContent", UnityWebRequest.kHttpVerbPOST))
         {
             req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json.ToString()));
             req.downloadHandler = new DownloadHandlerBuffer();
             req.SetRequestHeader("Content-Type", "application/json");
-            req.SetRequestHeader("Authorization", "Bearer " + OpenRouterKey);
-            req.SetRequestHeader("X-Title", "MateSusu");
+            req.SetRequestHeader("x-goog-api-key", GeminiKey);
             req.timeout = 60;
             request = req;
             yield return req.SendWebRequest();
@@ -244,10 +242,14 @@ public class SusuChatMic : MonoBehaviour
 
             string body = req.downloadHandler.text;
             if (req.result != UnityWebRequest.Result.Success) { onError?.Invoke($"{req.responseCode} {req.error} {Short(body)}"); yield break; }
-            ChatReply reply = null;
-            try { reply = JsonUtility.FromJson<ChatReply>(body); } catch (Exception) { }
-            if (reply?.choices == null || reply.choices.Length == 0 || reply.choices[0].message == null) { onError?.Invoke("Unexpected answer: " + Short(body)); yield break; }
-            onText?.Invoke((reply.choices[0].message.content ?? "").Trim());
+            GeminiReply reply = null;
+            try { reply = JsonUtility.FromJson<GeminiReply>(body); } catch (Exception) { }
+            if (reply?.candidates == null || reply.candidates.Length == 0 || reply.candidates[0].content?.parts == null)
+            { onError?.Invoke("Unexpected answer: " + Short(body)); yield break; }
+            var text = new StringBuilder();
+            foreach (var part in reply.candidates[0].content.parts)
+                if (part != null && !part.thought && !string.IsNullOrEmpty(part.text)) text.Append(part.text);
+            onText?.Invoke(text.ToString().Trim());
         }
     }
 
@@ -268,8 +270,9 @@ public class SusuChatMic : MonoBehaviour
 
 #pragma warning disable 0649 // filled by JsonUtility
     [Serializable] class SttReply { public string text; public string language_code; }
-    [Serializable] class ChatReply { public ChatChoice[] choices; }
-    [Serializable] class ChatChoice { public ChatMessage message; }
-    [Serializable] class ChatMessage { public string content; }
+    [Serializable] class GeminiReply { public GeminiCandidate[] candidates; }
+    [Serializable] class GeminiCandidate { public GeminiContent content; }
+    [Serializable] class GeminiContent { public GeminiPart[] parts; }
+    [Serializable] class GeminiPart { public string text; public bool thought; }
 #pragma warning restore 0649
 }

@@ -204,9 +204,9 @@ public class SusuAiMenu : MonoBehaviour
         var toggleTemplate = SusuVoicesMenu.FindSceneObject(ToggleTemplate)?.transform as RectTransform;
         float y = TopPadding;
 
-        y = Section(title, content, "OPENROUTER KEY (CHAT)", y, width);
-        y = KeyField(content, y, "OpenRouter Key",
-            () => SusuAiSettings.OpenRouterKeySource, () => SusuAiSettings.OpenRouterKey, v => SusuAiSettings.OpenRouterKey = v);
+        y = Section(title, content, "GEMINI KEY (CHAT, FREE)", y, width);
+        y = KeyField(content, y, "Gemini Key",
+            () => SusuAiSettings.GeminiKeySource, () => SusuAiSettings.GeminiKey, v => SusuAiSettings.GeminiKey = v);
 
         y = Section(title, content, "ELEVENLABS KEY (VOICE AND MIC)", y, width);
         y = KeyField(content, y, "ElevenLabs Key",
@@ -217,6 +217,9 @@ public class SusuAiMenu : MonoBehaviour
 
         y = Section(title, content, "VOICE FOR CHAT REPLIES", y, width);
         y = Picker(content, y, "Voice Model", SusuAiSettings.VoiceModels, () => SusuAiSettings.VoiceModel, v => SusuAiSettings.VoiceModel = v);
+
+        y = Section(title, content, "GEMINI VOICE", y, width);
+        y = Picker(content, y, "Gemini Voice", SusuAiSettings.GeminiVoices, () => SusuAiSettings.GeminiVoice, v => SusuAiSettings.GeminiVoice = v);
 
         y = Section(title, content, "SUSU REPLIES IN", y, width);
         y = Choice(buttonTemplate, content, y,
@@ -387,7 +390,7 @@ public class SusuAiMenu : MonoBehaviour
     public static void NewChat()
     {
         if (SusuChatWindow.Instance != null) SusuChatWindow.Instance.NewChat();
-        else if (OpenRouterChat.Instance != null) OpenRouterChat.Instance.ClearHistory();
+        else if (SusuChat.Instance != null) SusuChat.Instance.ClearHistory();
     }
 }
 

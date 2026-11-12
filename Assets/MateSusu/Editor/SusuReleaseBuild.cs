@@ -9,9 +9,9 @@ using UnityEngine;
 /// Builds the Windows release that gets uploaded to GitHub: Builds/MateSusu-v&lt;Version&gt;/MateSusu.exe.
 /// The release is meant to be shared, so it
 ///  - uses a motion library without the personal-use animation packs (restored for the Editor afterwards),
-///  - leaves out the local LLM runtime (the chat runs on OpenRouter) and Unity's debug symbols,
+///  - leaves out the local LLM runtime (the chat runs on Gemini) and Unity's debug symbols,
 ///  - never contains a .env file (users type their API keys in the AI window, or add their own .env),
-///  - carries the licence texts, the animation credits and a .env example.
+///  - carries the licence texts, the animation credits, a .env example and the SusuModels folder.
 /// Zip the folder afterwards to upload it.
 /// </summary>
 public static class SusuReleaseBuild
@@ -84,11 +84,21 @@ public static class SusuReleaseBuild
         Copy("NOTICE.txt", Path.Combine(outDir, "NOTICE.txt"), log);
         Copy("Assets/MateSusu/Animations/CREDITS.md", Path.Combine(outDir, "CREDITS-animations.md"), log);
         Copy(".env.example", Path.Combine(outDir, "env.example.txt"), log);
+
+        // Models that appear ready in the Models menu.
+        if (Directory.Exists(SusuModels.FolderName))
+        {
+            string models = Path.Combine(outDir, SusuModels.FolderName);
+            Directory.CreateDirectory(models);
+            foreach (var f in Directory.GetFiles(SusuModels.FolderName, "*.vrm"))
+                File.Copy(f, Path.Combine(models, Path.GetFileName(f)), true);
+        }
         File.WriteAllText(Path.Combine(outDir, "README.txt"),
             "MateSusu " + Version + " - a Mate Engine fork with Susu's voice, chat and motions.\r\n\r\n" +
             "Start MateSusu.exe. Right-click the avatar for the radial menu.\r\n" +
-            "Chat and voice need your own API keys: open the AI slice of the radial menu and paste an OpenRouter key\r\n" +
-            "(chat) and/or an ElevenLabs key (voice and microphone). Keys are stored encrypted for your Windows user.\r\n" +
+            "Chat needs a free Gemini API key from https://aistudio.google.com/apikey : open the AI slice of the radial\r\n" +
+            "menu and paste it. Susu's voice in chat uses ElevenLabs (paste an ElevenLabs key) or, if you choose it, Gemini.\r\n" +
+            "Keys are stored encrypted for your Windows user. Models in the SusuModels folder appear in the Models menu.\r\n" +
             "Optional: rename env.example.txt to .env next to MateSusu.exe to configure everything in a file.\r\n\r\n" +
             "Source code and licence: https://github.com/klysman08/Mate-Engine\r\n" +
             "Based on Mate Engine by shinyflvre: https://github.com/shinyflvre/Mate-Engine\r\n");

@@ -6,50 +6,49 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 /// <summary>
-/// Streaming chat client for OpenRouter (OpenAI-compatible /chat/completions).
-/// The key and model come from SusuAiSettings (AI window, else .env), so both can change while the app runs.
+/// Streaming chat with Google Gemini (generateContent REST API, server-sent events). A free API key comes from
+/// Google AI Studio. The key and model come from SusuAiSettings (AI window, else .env), so both can change while
+/// the app runs.
 /// </summary>
-public class OpenRouterChat : MonoBehaviour
+public class SusuChat : MonoBehaviour
 {
-    public const string Endpoint = "https://openrouter.ai/api/v1/chat/completions";
-    public const string DefaultModel = SusuAiSettings.DefaultChatModel;
+    public const string ApiRoot = "https://generativelanguage.googleapis.com/v1beta/models/";
 
-    public static OpenRouterChat Instance { get; private set; }
+    public static SusuChat Instance { get; private set; }
 
-    [Header("Config (filled from .env at startup)")]
-    public string model = DefaultModel;
-    [Range(0f, 2f)] public float temperature = 0.8f;
-    [Min(16)] public int maxTokens = 400;
+    [Tooltip("Room for the reply (and the model's thinking, which counts against it).")]
+    [Min(64)] public int maxTokens = 1024;
     [Tooltip("How many previous messages (user + assistant) are sent as context.")]
     [Min(0)] public int historyLimit = 20;
 
     [Header("Character")]
     [Tooltip("Resources/<name>.txt holding the character persona (system prompt).")]
     public string personaResource = "SusuPersona";
-    [Tooltip("auto = mirror the user's language (English or Japanese only), en = English, ja = Japanese")]
-    public string language = "auto";
 
-    [Header("Runtime")]
-    [SerializeField] bool active;
+    /// <summary>The model used for the last message (for logs and tests).</summary>
+    public string model;
 
-    string apiKey => SusuAiSettings.OpenRouterKey;
     readonly List<Msg> history = new List<Msg>();
     UnityWebRequest current;
 
-    public bool IsActive => active && !string.IsNullOrEmpty(apiKey);
+    static string ApiKey => SusuAiSettings.GeminiKey;
+
+    /// <summary>True when there is a key to chat with.</summary>
+    public bool HasKey => !string.IsNullOrEmpty(ApiKey);
     public bool IsBusy => current != null;
 
-    /// <summary>True when there is a key to chat with (the chat may still be switched off in .env).</summary>
-    public bool HasKey => !string.IsNullOrEmpty(apiKey);
-
-    public void Configure()
+    void Awake()
     {
+        if (Instance != null && Instance != this) { Destroy(this); return; }
+        Instance = this;
         model = SusuAiSettings.ChatModel;
-        temperature = MateSusuEnv.GetFloat("OPENROUTER_TEMPERATURE", temperature);
-        maxTokens = Mathf.RoundToInt(MateSusuEnv.GetFloat("OPENROUTER_MAX_TOKENS", maxTokens));
-        active = MateSusuEnv.GetBool("OPENROUTER_CHAT_ENABLED", true);
-        language = MateSusuEnv.Get("OPENROUTER_LANGUAGE", language).Trim().ToLowerInvariant();
-        Debug.Log($"[OpenRouter] Chat {(active ? "enabled" : "disabled")} - model '{model}', language '{SusuAiSettings.ReplyLanguage}', key {(HasKey ? "found" : "missing")} (config: {MateSusuEnv.LoadedFrom})");
+        Debug.Log($"[SusuChat] Gemini model '{model}', language '{SusuAiSettings.ReplyLanguage}', key {(HasKey ? "found" : "missing")} (config: {MateSusuEnv.LoadedFrom})");
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+        Cancel();
     }
 
     /// <summary>Persona from Resources plus the language rule. Falls back to the given prompt if the persona is missing.</summary>
@@ -57,9 +56,9 @@ public class OpenRouterChat : MonoBehaviour
     {
         var persona = Resources.Load<TextAsset>(personaResource);
         string basePrompt = persona != null ? persona.text.Trim() : fallbackPrompt;
-        string rule = LanguageRule(SusuAiSettings.ReplyLanguage); // .env value unless changed in the AI window
+        string rule = LanguageRule(SusuAiSettings.ReplyLanguage);
         string prompt = string.IsNullOrWhiteSpace(basePrompt) ? rule : basePrompt + "\n\nLanguage:\n- " + rule;
-        var tts = OpenRouterTTS.Instance;
+        var tts = SusuTTS.Instance;
         if (tts != null && tts.speakReplies && tts.UsesAudioTags) prompt += "\n\n" + VoiceRule;
         return prompt;
     }
@@ -78,11 +77,8 @@ public class OpenRouterChat : MonoBehaviour
         switch (lang)
         {
             case "en":
-            case "english":
                 return "Always reply in English, even if the user writes in another language.";
             case "ja":
-            case "jp":
-            case "japanese":
                 return "Always reply in Japanese (日本語), even if the user writes in another language.";
             default:
                 return "Reply in English or Japanese only. If the user's latest message is in Japanese, reply in Japanese; " +
@@ -90,27 +86,12 @@ public class OpenRouterChat : MonoBehaviour
         }
     }
 
-    void Awake()
-    {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
-    }
-
-    void OnDestroy()
-    {
-        if (Instance == this) Instance = null;
-        Cancel();
-    }
-
     public void ClearHistory() => history.Clear();
 
-    /// <summary>
-    /// Sends a user message. onPartial receives the full text accumulated so far.
-    /// </summary>
+    /// <summary>Sends a user message. onPartial receives the full text accumulated so far.</summary>
     public void Chat(string message, string systemPrompt, Action<string> onPartial, Action<string> onComplete, Action<string> onError = null)
     {
-        if (!HasKey) { onError?.Invoke("No OpenRouter API key yet. Add one in the AI settings window."); return; }
-        if (!IsActive) { onError?.Invoke("Chat is switched off (OPENROUTER_CHAT_ENABLED in .env)."); return; }
+        if (!HasKey) { onError?.Invoke("No Gemini API key yet. Add a free one from Google AI Studio in the AI settings window."); return; }
         Cancel();
         StartCoroutine(ChatRoutine(message, systemPrompt, onPartial, onComplete, onError));
     }
@@ -124,33 +105,32 @@ public class OpenRouterChat : MonoBehaviour
 
     IEnumerator ChatRoutine(string message, string systemPrompt, Action<string> onPartial, Action<string> onComplete, Action<string> onError)
     {
-        var messages = new List<Msg>();
-        if (!string.IsNullOrWhiteSpace(systemPrompt)) messages.Add(new Msg("system", systemPrompt));
-        int start = Mathf.Max(0, history.Count - historyLimit);
-        for (int i = start; i < history.Count; i++) messages.Add(history[i]);
-        messages.Add(new Msg("user", message));
-
         model = SusuAiSettings.ChatModel; // may have been changed in the AI window since the last message
-        var body = new ChatRequest
+
+        var contents = new List<OutContent>();
+        int start = Mathf.Max(0, history.Count - historyLimit);
+        for (int i = start; i < history.Count; i++) contents.Add(OutContent.Of(history[i].role, history[i].content));
+        contents.Add(OutContent.Of("user", message));
+
+        var body = new Request
         {
-            model = model,
-            stream = true,
-            temperature = temperature,
-            max_tokens = maxTokens,
-            messages = messages.ToArray()
+            contents = contents.ToArray(),
+            generationConfig = new GenerationConfig { maxOutputTokens = maxTokens },
         };
+        // JsonUtility cannot leave out an empty object, so the optional system instruction is spliced in by hand.
+        string json = JsonUtility.ToJson(body);
+        if (!string.IsNullOrWhiteSpace(systemPrompt))
+            json = "{\"system_instruction\":" + JsonUtility.ToJson(new SystemContent { parts = new[] { new OutPart { text = systemPrompt } } }) + "," + json.Substring(1);
 
         var handler = new SseHandler(onPartial);
-        var req = new UnityWebRequest(Endpoint, UnityWebRequest.kHttpVerbPOST)
+        var req = new UnityWebRequest(ApiRoot + UnityWebRequest.EscapeURL(model) + ":streamGenerateContent?alt=sse", UnityWebRequest.kHttpVerbPOST)
         {
-            uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(JsonUtility.ToJson(body))),
+            uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json)),
             downloadHandler = handler,
             timeout = 120
         };
         req.SetRequestHeader("Content-Type", "application/json");
-        req.SetRequestHeader("Authorization", "Bearer " + apiKey);
-        req.SetRequestHeader("HTTP-Referer", "https://github.com/klysman08/Mate-Engine");
-        req.SetRequestHeader("X-Title", "MateSusu");
+        req.SetRequestHeader("x-goog-api-key", ApiKey);
 
         current = req;
         yield return req.SendWebRequest();
@@ -164,14 +144,21 @@ public class OpenRouterChat : MonoBehaviour
             if (req.result != UnityWebRequest.Result.Success || handler.Error != null)
             {
                 string err = handler.Error ?? ExtractError(handler.RawText) ?? req.error;
-                Debug.LogWarning($"[OpenRouter] Chat failed ({req.responseCode}): {err}");
+                Debug.LogWarning($"[SusuChat] Gemini failed ({req.responseCode}): {err}");
                 onError?.Invoke(err);
                 yield break;
             }
 
             string reply = handler.Text.Trim();
+            if (reply.Length == 0)
+            {
+                string why = handler.FinishReason ?? "empty reply";
+                Debug.LogWarning("[SusuChat] Gemini returned no text: " + why);
+                onError?.Invoke("Susu had nothing to say (" + why + ").");
+                yield break;
+            }
             history.Add(new Msg("user", message));
-            history.Add(new Msg("assistant", reply));
+            history.Add(new Msg("model", reply));
             onComplete?.Invoke(reply);
         }
         finally
@@ -185,7 +172,7 @@ public class OpenRouterChat : MonoBehaviour
         if (string.IsNullOrEmpty(raw)) return null;
         try
         {
-            var e = JsonUtility.FromJson<ErrorEnvelope>(raw);
+            var e = JsonUtility.FromJson<ErrorEnvelope>(raw.TrimStart('['));
             if (e?.error != null && !string.IsNullOrEmpty(e.error.message)) return e.error.message;
         }
         catch { }
@@ -204,6 +191,7 @@ public class OpenRouterChat : MonoBehaviour
         public string Text => buffer.ToString();
         public string RawText => raw.ToString();
         public string Error { get; private set; }
+        public string FinishReason { get; private set; }
 
         public SseHandler(Action<string> onPartial) : base(new byte[4096]) { this.onPartial = onPartial; }
 
@@ -211,70 +199,79 @@ public class OpenRouterChat : MonoBehaviour
         {
             if (data == null || dataLength == 0) return true;
             bool changed = false;
-
             for (int i = 0; i < dataLength; i++)
             {
                 if (data[i] != (byte)'\n') { pending.Add(data[i]); continue; }
                 changed |= HandleLine(Encoding.UTF8.GetString(pending.ToArray()).TrimEnd('\r'));
                 pending.Clear();
             }
-
             if (changed) onPartial?.Invoke(buffer.ToString());
             return true;
         }
 
         protected override void CompleteContent()
         {
-            if (pending.Count > 0)
-            {
-                if (HandleLine(Encoding.UTF8.GetString(pending.ToArray()).TrimEnd('\r')))
-                    onPartial?.Invoke(buffer.ToString());
-                pending.Clear();
-            }
+            if (pending.Count == 0) return;
+            if (HandleLine(Encoding.UTF8.GetString(pending.ToArray()).TrimEnd('\r'))) onPartial?.Invoke(buffer.ToString());
+            pending.Clear();
         }
 
         bool HandleLine(string line)
         {
-            if (line.Length == 0 || line.StartsWith(":")) return false; // keep-alive comments
+            if (line.Length == 0 || line.StartsWith(":")) return false;
             if (!line.StartsWith("data:"))
             {
                 raw.AppendLine(line); // non-SSE body, e.g. a JSON error
                 return false;
             }
-
-            string payload = line.Substring(5).Trim();
-            if (payload == "[DONE]") return false;
-
             try
             {
-                var chunk = JsonUtility.FromJson<StreamChunk>(payload);
-                if (chunk?.error != null && !string.IsNullOrEmpty(chunk.error.message))
+                var chunk = JsonUtility.FromJson<Response>(line.Substring(5).Trim());
+                if (chunk?.error != null && !string.IsNullOrEmpty(chunk.error.message)) { Error = chunk.error.message; return false; }
+                if (chunk?.candidates == null || chunk.candidates.Length == 0) return false;
+                var cand = chunk.candidates[0];
+                if (!string.IsNullOrEmpty(cand.finishReason)) FinishReason = cand.finishReason;
+                if (cand.content?.parts == null) return false;
+                bool changed = false;
+                foreach (var part in cand.content.parts)
                 {
-                    Error = chunk.error.message;
-                    return false;
+                    if (part == null || part.thought || string.IsNullOrEmpty(part.text)) continue; // skip thinking summaries
+                    buffer.Append(part.text);
+                    changed = true;
                 }
-                var delta = chunk?.choices != null && chunk.choices.Length > 0 ? chunk.choices[0].delta?.content : null;
-                if (string.IsNullOrEmpty(delta)) return false;
-                buffer.Append(delta);
-                return true;
+                return changed;
             }
             catch (Exception e)
             {
-                Debug.LogWarning("[OpenRouter] Bad stream chunk: " + e.Message);
+                Debug.LogWarning("[SusuChat] Bad stream chunk: " + e.Message);
                 return false;
             }
         }
     }
 
-    // ---------- JSON shapes (filled by JsonUtility) ----------
+    // ---------- JSON shapes (JsonUtility) ----------
 #pragma warning disable 0649
 
     [Serializable] public class Msg { public string role; public string content; public Msg(string r, string c) { role = r; content = c; } }
-    [Serializable] class ChatRequest { public string model; public bool stream; public float temperature; public int max_tokens; public Msg[] messages; }
-    [Serializable] class StreamChunk { public Choice[] choices; public ApiError error; }
-    [Serializable] class Choice { public Delta delta; public string finish_reason; }
-    [Serializable] class Delta { public string content; }
-    [Serializable] class ApiError { public string message; public int code; }
+
+    // Sent
+    [Serializable] class OutPart { public string text; }
+    [Serializable] class OutContent
+    {
+        public string role;
+        public OutPart[] parts;
+        public static OutContent Of(string role, string text) => new OutContent { role = role, parts = new[] { new OutPart { text = text } } };
+    }
+    [Serializable] class SystemContent { public OutPart[] parts; }
+    [Serializable] class GenerationConfig { public int maxOutputTokens; }
+    [Serializable] class Request { public OutContent[] contents; public GenerationConfig generationConfig; }
+
+    // Received
+    [Serializable] class Part { public string text; public bool thought; }
+    [Serializable] class Content { public string role; public Part[] parts; }
+    [Serializable] class Candidate { public Content content; public string finishReason; }
+    [Serializable] class Response { public Candidate[] candidates; public ApiError error; }
+    [Serializable] class ApiError { public string message; public int code; public string status; }
     [Serializable] class ErrorEnvelope { public ApiError error; }
 #pragma warning restore 0649
 }

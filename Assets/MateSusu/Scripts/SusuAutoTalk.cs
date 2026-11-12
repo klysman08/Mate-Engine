@@ -199,10 +199,11 @@ public class SusuAutoTalk : MonoBehaviour
 
     bool CanTalkNow()
     {
-        var tts = OpenRouterTTS.Instance;
+        var tts = SusuTTS.Instance;
         if (SusuVoiceLines.Instance == null || tts == null) return false;
         if (tts.IsSpeaking) return false;
-        if (OpenRouterChat.Instance != null && OpenRouterChat.Instance.IsBusy) return false;
+        if (SusuState.InCustomDance) return false;
+        if (SusuChat.Instance != null && SusuChat.Instance.IsBusy) return false;
         return true;
     }
 

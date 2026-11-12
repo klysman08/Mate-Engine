@@ -6,9 +6,9 @@ using UnityEngine;
 /// <summary>
 /// Pre-defined phrases Susu can say. Audio is read from local WAV files so playing a phrase costs nothing:
 ///   1. StreamingAssets/MateSusu/Voices/&lt;pack&gt;/&lt;id&gt;.wav   (shipped)
-///   2. persistentDataPath/MateSusu/VoiceCache/&lt;pack&gt;/&lt;id&gt;.wav (generated once via OpenRouter, then reused)
+///   2. persistentDataPath/MateSusu/VoiceCache/&lt;pack&gt;/&lt;id&gt;.wav (generated once with the chat voice, then reused)
 /// Packs: "ja_elevenlabs" (default; ElevenLabs Eleven v4, Tools/MateSusu/generate_voice_lines_elevenlabs.py)
-///        "ja" (older OpenRouter lines, Tools/MateSusu/generate_voice_lines.py). Choose with SUSU_VOICE_PACK in .env.
+///        "ja" (older generated lines, Tools/MateSusu/generate_voice_lines.py). Choose with SUSU_VOICE_PACK in .env.
 /// </summary>
 public class SusuVoiceLines : MonoBehaviour
 {
@@ -20,7 +20,7 @@ public class SusuVoiceLines : MonoBehaviour
         public string id;
         public string label;     // shown on the menu button
         public string text;      // what Susu says
-        public string direction; // extra acting direction used when generating (OpenRouter packs)
+        public string direction; // extra acting direction used when generating (non-ElevenLabs packs)
         public string voiceText; // text with ElevenLabs v4 audio tags, used only by the offline generator
         public string learn;     // Japanese deck: the expression being taught (e.g. いただきます)
         public string romaji;    // Japanese deck: its reading
@@ -135,8 +135,9 @@ public class SusuVoiceLines : MonoBehaviour
 
     public void Play(Phrase p, bool auto = false)
     {
-        var tts = OpenRouterTTS.Instance;
+        var tts = SusuTTS.Instance;
         if (p == null || tts == null) return;
+        if (SusuState.InCustomDance) return; // never talk over a custom dance
         CurrentIsAuto = auto;
 
         var clip = GetLocalClip(p);
@@ -166,7 +167,7 @@ public class SusuVoiceLines : MonoBehaviour
                 }
                 catch (Exception e) { Debug.LogWarning("[SusuVoice] Cache write failed: " + e.Message); }
 
-                var c = OpenRouterTTS.PcmToClip(pcm, rate);
+                var c = SusuTTS.PcmToClip(pcm, rate);
                 if (c == null) return;
                 c.name = p.id;
                 loaded[p.id] = c;
@@ -239,6 +240,50 @@ public static class WavUtil
             w.Flush();
             return ms.ToArray();
         }
+    }
+
+    /// <summary>If <paramref name="bytes"/> is a 16-bit WAV file, returns its PCM data (mono, mixed down if needed)
+    /// and sets <paramref name="rate"/>; otherwise null.</summary>
+    public static byte[] TryUnwrap(byte[] bytes, ref int rate)
+    {
+        if (bytes == null || bytes.Length < 44 || bytes[0] != 'R' || bytes[1] != 'I' || bytes[2] != 'F' || bytes[3] != 'F') return null;
+        int channels = 1, bits = 16, pos = 12, wavRate = rate;
+        while (pos + 8 <= bytes.Length)
+        {
+            string id = System.Text.Encoding.ASCII.GetString(bytes, pos, 4);
+            int size = BitConverter.ToInt32(bytes, pos + 4);
+            if (id == "fmt ")
+            {
+                channels = BitConverter.ToInt16(bytes, pos + 10);
+                wavRate = BitConverter.ToInt32(bytes, pos + 12);
+                bits = BitConverter.ToInt16(bytes, pos + 22);
+            }
+            else if (id == "data")
+            {
+                int start = pos + 8, len = Math.Min(size < 0 ? int.MaxValue : size, bytes.Length - start);
+                if (bits != 16 || channels < 1) return null;
+                rate = wavRate;
+                if (channels == 1)
+                {
+                    var mono = new byte[len - (len & 1)];
+                    Buffer.BlockCopy(bytes, start, mono, 0, mono.Length);
+                    return mono;
+                }
+                int frames = len / (2 * channels);
+                var mixed = new byte[frames * 2];
+                for (int f = 0; f < frames; f++)
+                {
+                    int sum = 0;
+                    for (int c = 0; c < channels; c++) sum += (short)(bytes[start + 2 * (f * channels + c)] | (bytes[start + 2 * (f * channels + c) + 1] << 8));
+                    short s = (short)(sum / channels);
+                    mixed[2 * f] = (byte)(s & 0xff);
+                    mixed[2 * f + 1] = (byte)((s >> 8) & 0xff);
+                }
+                return mixed;
+            }
+            pos += 8 + size + (size & 1);
+        }
+        return null;
     }
 
     public static AudioClip Read(string path, string name)

@@ -35,12 +35,12 @@ public class SusuIdleMotions : MonoBehaviour
         if (!SusuAiSettings.IdleMotions) { Schedule(); return; }
 
         var player = SusuClipPlayer.Instance;
-        var tts = OpenRouterTTS.Instance;
+        var tts = SusuTTS.Instance;
         if (animator == null || !animator.isActiveAndEnabled) animator = SusuClipPlayer.FindAvatarAnimator();
 
         bool busy = player == null || player.IsPlaying
                     || (tts != null && tts.IsSpeaking)
-                    || (OpenRouterChat.Instance != null && OpenRouterChat.Instance.IsBusy)
+                    || (SusuChat.Instance != null && SusuChat.Instance.IsBusy)
                     || SusuClipPlayer.AvatarBusy(animator);
         if (busy)
         {

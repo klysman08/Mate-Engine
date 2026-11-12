@@ -17,6 +17,7 @@ public class SusuClipPlayer : MonoBehaviour
     {
         "isDragging", "isDancing", "isSitting", "isWindowSit", "isTaskbarSit", "IsSleeping",
         "isBigScreen", "isBigScreenSaver", "isBigScreenAlarm", "HideLeft", "HideRight",
+        "isCustomDancing", "isWaitingForDancing", // custom dance (Dance Player): never move over it
     };
 
     public bool IsPlaying => graph.IsValid() && outTarget > 0f;

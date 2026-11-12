@@ -183,7 +183,7 @@ public class SusuVoicesMenu : MonoBehaviour
             var left = footer.Find("Add Alarm") as RectTransform;
             var right = footer.Find("Add Timer") as RectTransform;
             buttonTemplate = left != null ? left : right;
-            Rebind(left, "STOP", () => OpenRouterTTS.Instance?.Stop());
+            Rebind(left, "STOP", () => SusuTTS.Instance?.Stop());
             Rebind(right, "CLOSE", Close);
         }
 
@@ -358,7 +358,7 @@ public class SusuVoicesMenu : MonoBehaviour
     {
         float width = content.rect.width > 100f ? content.rect.width : 633f;
         var auto = SusuAutoTalk.Instance;
-        var tts = OpenRouterTTS.Instance;
+        var tts = SusuTTS.Instance;
 
         // "Susu talks by herself" checkbox
         var toggleRect = CloneControl(toggleTemplate, content, "AutoTalk Toggle");
@@ -422,7 +422,7 @@ public class SusuVoicesMenu : MonoBehaviour
             vol.SetValueWithoutNotify(tts != null ? tts.Volume : 1f);
             vol.onValueChanged.AddListener(v =>
             {
-                if (OpenRouterTTS.Instance != null) OpenRouterTTS.Instance.Volume = v;
+                if (SusuTTS.Instance != null) SusuTTS.Instance.Volume = v;
                 UpdateVolumeLabel(v);
             });
             UpdateVolumeLabel(vol.value);

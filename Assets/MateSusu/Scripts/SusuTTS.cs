@@ -9,56 +9,44 @@ using UniVRM10;
 using VRM;
 
 /// <summary>
-/// Susu's voice. Speech comes from ElevenLabs (same voice as the pre-recorded lines, default when
-/// ELEVENLABS_API_KEY is set) or OpenRouter's /audio/speech endpoint (fish-audio/drama-3), chosen with
-/// SUSU_TTS_PROVIDER. Played as 16-bit PCM with simple amplitude-based lip sync on the current VRM avatar.
+/// Susu's voice for chat replies, plus playback of every clip she says (voice lines too) with simple
+/// amplitude-based lip sync on the current VRM avatar. Speech comes from ElevenLabs (default, the same voice as
+/// the pre-recorded lines) or from Gemini text-to-speech (free with an AI Studio key), chosen in the AI window.
+/// While Susu is in a custom dance nothing is spoken.
 /// </summary>
 [DefaultExecutionOrder(1000)] // after UniversalBlendshapes / animator writes, before VRM10 applies expressions
-public class OpenRouterTTS : MonoBehaviour
+public class SusuTTS : MonoBehaviour
 {
-    public enum Provider { OpenRouter, ElevenLabs }
+    public enum Provider { ElevenLabs, Gemini }
 
-    public const string Endpoint = "https://openrouter.ai/api/v1/audio/speech";
     public const string ElevenLabsEndpoint = "https://api.elevenlabs.io/v1/text-to-speech/";
     public const string DefaultElevenVoice = "fUjY9K2nAIwlALOwSiwc"; // Yui (ElevenLabs voice library)
     public const string DefaultElevenModel = "eleven_v4";
     const int ElevenSampleRate = 24000; // pcm_24000 works on every plan
-    public const string DefaultModel = "fish-audio/drama-3";
-    // Fish Audio: voice = a Fish "reference_id" (empty = provider default voice), delivery via [bracket] directions.
-    // Kokoro (hexgrad/kokoro-82m) also works: voices af_heart / jf_alpha etc.
-    public const string DefaultVoiceEn = "";
-    public const string DefaultVoiceJa = "";
-    public const string DefaultInstructions = "cute, cheerful, affectionate young girl, soft and sweet";
-    const int PcmSampleRate = 24000; // fallback when the Content-Type has no rate (Fish sends 44100, Kokoro 24000)
+    const int GeminiSampleRate = 24000; // Gemini TTS: 24 kHz, mono, 16-bit
+    public const string DefaultGeminiStyle = "a cute, cheerful, affectionate young girl, soft and sweet";
 
-    public static OpenRouterTTS Instance { get; private set; }
+    public static SusuTTS Instance { get; private set; }
 
-    [Header("Config (filled from .env at startup)")]
+    [Header("Config (AI window, else .env)")]
     public bool speakReplies = true;
-    [Tooltip("SUSU_TTS_PROVIDER = elevenlabs | openrouter (default: elevenlabs when ELEVENLABS_API_KEY is set).")]
-    public Provider provider = Provider.OpenRouter;
+    public Provider provider = Provider.ElevenLabs;
 
     [Header("ElevenLabs")]
     public string elevenVoiceId = DefaultElevenVoice;
-    [Tooltip("ELEVENLABS_CHAT_MODEL. eleven_v4 = best quality; eleven_v4_turbo = faster replies.")]
+    [Tooltip("eleven_v4 = best quality; eleven_v4_turbo = faster replies.")]
     public string elevenModel = DefaultElevenModel;
     [Tooltip("Lower = more expressive, higher = steadier delivery.")]
     [Range(0f, 1f)] public float elevenStability = 0.45f;
     [Tooltip("How closely the output sticks to the reference voice.")]
     [Range(0f, 1f)] public float elevenSimilarity = 0.8f;
 
-    [Header("OpenRouter")]
-    public string model = DefaultModel;
-    [Tooltip("Voice used for English replies.")]
-    public string voiceEn = DefaultVoiceEn;
-    [Tooltip("Voice used when the reply is mostly Japanese text.")]
-    public string voiceJa = DefaultVoiceJa;
-    [Tooltip("Delivery direction (tone/emotion). Fish Audio turns it into a [direction] before the text; OpenAI/Gemini TTS also honour it.")]
-    public string instructions = DefaultInstructions;
-    [Tooltip("Only sent when different from 1 (many providers reject a non-default speed).")]
-    [Range(0.5f, 2f)] public float speed = 1f;
-    [Tooltip("Playback pitch. Slightly above 1 makes the voice brighter (also a bit faster).")]
-    [Range(0.8f, 1.3f)] public float pitch = 1f;
+    [Header("Gemini")]
+    public string geminiModel = SusuAiSettings.DefaultGeminiTtsModel;
+    public string geminiVoice = SusuAiSettings.DefaultGeminiVoice;
+    [Tooltip("How she should sound (Gemini reads it as a style direction).")]
+    public string geminiStyle = DefaultGeminiStyle;
+
     [Range(0f, 1f)] public float volume = 1f;
     [Tooltip("Longer texts are cut at a sentence boundary to keep latency and cost low.")]
     [Min(50)] public int maxChars = 600;
@@ -70,12 +58,14 @@ public class OpenRouterTTS : MonoBehaviour
 
     public bool IsSpeaking => source != null && source.isPlaying;
 
-    string apiKey => SusuAiSettings.OpenRouterKey;
-    string elevenKey => SusuAiSettings.ElevenLabsKey;
+    string ElevenKey => SusuAiSettings.ElevenLabsKey;
+    string GeminiKey => SusuAiSettings.GeminiKey;
+
     AudioSource source;
     UnityWebRequest current;
     readonly float[] window = new float[256];
     float mouth;
+    bool geminiLegacyShape; // older TTS request shape, used after the current one is refused
 
     // Current avatar
     GameObject avatarRoot;
@@ -90,37 +80,27 @@ public class OpenRouterTTS : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
 
-        speakReplies = SusuAiSettings.SpeakReplies; // OPENROUTER_TTS_ENABLED unless changed in the AI window
+        speakReplies = SusuAiSettings.SpeakReplies;
         SusuAiSettings.Changed += OnSettingsChanged;
-        voiceEn = MateSusuEnv.Get("OPENROUTER_TTS_VOICE_EN", DefaultVoiceEn);
-        voiceJa = MateSusuEnv.Get("OPENROUTER_TTS_VOICE_JA", DefaultVoiceJa);
-        instructions = MateSusuEnv.Get("OPENROUTER_TTS_INSTRUCTIONS", DefaultInstructions);
-        speed = MateSusuEnv.GetFloat("OPENROUTER_TTS_SPEED", speed);
-        pitch = MateSusuEnv.GetFloat("OPENROUTER_TTS_PITCH", pitch);
-        volume = MateSusuEnv.GetFloat("OPENROUTER_TTS_VOLUME", volume);
         if (PlayerPrefs.HasKey(VolumePref)) volume = Mathf.Clamp01(PlayerPrefs.GetFloat(VolumePref));
 
         elevenVoiceId = MateSusuEnv.Get("ELEVENLABS_VOICE_ID", elevenVoiceId).Trim();
         elevenStability = Mathf.Clamp01(MateSusuEnv.GetFloat("ELEVENLABS_STABILITY", elevenStability));
         elevenSimilarity = Mathf.Clamp01(MateSusuEnv.GetFloat("ELEVENLABS_SIMILARITY", elevenSimilarity));
-
+        geminiStyle = MateSusuEnv.Get("GEMINI_TTS_STYLE", geminiStyle);
         ApplyVoiceModel();
 
         source = gameObject.AddComponent<AudioSource>();
         source.playOnAwake = false;
         source.spatialBlend = 0f;
 
-        if (provider == Provider.ElevenLabs)
-            Debug.Log($"[SusuTTS] {(speakReplies ? "enabled" : "disabled")} - ElevenLabs model '{elevenModel}', voice '{elevenVoiceId}', stability {elevenStability}, similarity {elevenSimilarity}");
-        else
-            Debug.Log($"[SusuTTS] {(speakReplies ? "enabled" : "disabled")} - OpenRouter model '{model}', voices en='{Show(voiceEn)}' ja='{Show(voiceJa)}', direction '{instructions}', pitch {pitch}");
+        Debug.Log(provider == Provider.ElevenLabs
+            ? $"[SusuTTS] {(speakReplies ? "enabled" : "disabled")} - ElevenLabs model '{elevenModel}', voice '{elevenVoiceId}'"
+            : $"[SusuTTS] {(speakReplies ? "enabled" : "disabled")} - Gemini model '{geminiModel}', voice '{geminiVoice}'");
     }
 
     /// <summary>True when the voice acts out [giggles]/[whispers]-style tags in the text (ElevenLabs v3/v4).</summary>
     public bool UsesAudioTags => provider == Provider.ElevenLabs;
-
-    // ElevenLabs output already has the voice's natural pitch; the pitch setting is for OpenRouter voices.
-    float PlaybackPitch => provider == Provider.ElevenLabs ? 1f : pitch;
 
     void OnDestroy()
     {
@@ -135,23 +115,24 @@ public class OpenRouterTTS : MonoBehaviour
         ApplyVoiceModel();
     }
 
-    /// <summary>Reads "provider:model" from the settings. A provider without a key falls back to the other one.</summary>
+    /// <summary>Reads "provider:model" and the Gemini voice from the settings. A provider without a key falls back
+    /// to the other one.</summary>
     void ApplyVoiceModel()
     {
         string choice = SusuAiSettings.VoiceModel;
         int colon = choice.IndexOf(':');
-        bool wantsEleven = choice.StartsWith("elevenlabs", StringComparison.OrdinalIgnoreCase);
+        bool wantsGemini = choice.StartsWith("gemini", StringComparison.OrdinalIgnoreCase);
         string name = colon >= 0 ? choice.Substring(colon + 1).Trim() : "";
-
-        if (wantsEleven && name.Length > 0) elevenModel = name;
-        if (!wantsEleven) model = name.Length > 0 ? name : DefaultModel;
+        if (wantsGemini) geminiModel = name.Length > 0 ? name : SusuAiSettings.DefaultGeminiTtsModel;
+        else if (name.Length > 0) elevenModel = name;
+        geminiVoice = SusuAiSettings.GeminiVoice;
 
         var before = provider;
-        provider = wantsEleven ? Provider.ElevenLabs : Provider.OpenRouter;
-        if (provider == Provider.ElevenLabs && string.IsNullOrEmpty(elevenKey) && !string.IsNullOrEmpty(apiKey)) provider = Provider.OpenRouter;
-        else if (provider == Provider.OpenRouter && string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(elevenKey)) provider = Provider.ElevenLabs;
+        provider = wantsGemini ? Provider.Gemini : Provider.ElevenLabs;
+        if (provider == Provider.ElevenLabs && string.IsNullOrEmpty(ElevenKey) && !string.IsNullOrEmpty(GeminiKey)) provider = Provider.Gemini;
+        else if (provider == Provider.Gemini && string.IsNullOrEmpty(GeminiKey) && !string.IsNullOrEmpty(ElevenKey)) provider = Provider.ElevenLabs;
         if (provider != before && source != null)
-            Debug.Log($"[SusuTTS] Chat voice now {provider} '{(provider == Provider.ElevenLabs ? elevenModel : model)}'");
+            Debug.Log($"[SusuTTS] Chat voice now {provider} '{(provider == Provider.ElevenLabs ? elevenModel : geminiModel + " / " + geminiVoice)}'");
     }
 
     public void Stop()
@@ -160,7 +141,13 @@ public class OpenRouterTTS : MonoBehaviour
         if (source != null) source.Stop();
     }
 
-    public bool HasApiKey => !string.IsNullOrEmpty(provider == Provider.ElevenLabs ? elevenKey : apiKey);
+    void Update()
+    {
+        // A custom dance started while she was talking: stop.
+        if (IsSpeaking && SusuState.InCustomDance) Stop();
+    }
+
+    public bool HasApiKey => !string.IsNullOrEmpty(provider == Provider.ElevenLabs ? ElevenKey : GeminiKey);
 
     const string VolumePref = "MateSusu.VoiceVolume";
 
@@ -177,10 +164,10 @@ public class OpenRouterTTS : MonoBehaviour
     }
 
     /// <summary>Speaks the text if TTS is enabled. Interrupts anything already playing.
-    /// Returns false when nothing will be spoken (voice off, no key, empty text): onFinished is then never called.</summary>
+    /// Returns false when nothing will be spoken (voice off, no key, empty text, custom dance): onFinished is then never called.</summary>
     public bool Speak(string text, Action onStarted = null, Action onFinished = null)
     {
-        if (!speakReplies || !HasApiKey) return false;
+        if (!speakReplies || !HasApiKey || SusuState.InCustomDance) return false;
         text = CleanForSpeech(text);
         if (text.Length == 0) return false;
         Stop();
@@ -192,20 +179,18 @@ public class OpenRouterTTS : MonoBehaviour
 
     /// <summary>
     /// Generates speech and returns raw 16-bit mono PCM (little endian) and its sample rate.
-    /// extraDirection is appended to the configured delivery instructions (OpenRouter only; ElevenLabs
-    /// takes its acting from [tags] inside the text).
+    /// extraDirection is added to the delivery style (Gemini only; ElevenLabs takes its acting from [tags] in the text).
     /// </summary>
     public void Synthesize(string text, bool japanese, string extraDirection, Action<byte[], int> onDone, Action<string> onError)
     {
         if (!HasApiKey) { onError?.Invoke($"No {provider} API key"); return; }
         if (provider == Provider.ElevenLabs)
         {
-            StartCoroutine(SendRoutine(BuildElevenLabsRequest(text, japanese ? "ja" : "en"), ElevenSampleRate, "ElevenLabs", onDone, onError));
+            StartCoroutine(ElevenRoutine(BuildElevenLabsRequest(text, japanese ? "ja" : "en"), onDone, onError));
             return;
         }
-        string direction = string.Join(", ", new[] { instructions, extraDirection }
-            .Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()));
-        StartCoroutine(SendRoutine(BuildOpenRouterRequest(text, japanese ? voiceJa : voiceEn, direction), PcmSampleRate, "OpenRouter", onDone, onError));
+        string style = string.Join(", ", new[] { geminiStyle, extraDirection }.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()));
+        StartCoroutine(GeminiRoutine(StripAudioTags(text), style, onDone, onError));
     }
 
     UnityWebRequest BuildElevenLabsRequest(string text, string languageCode)
@@ -227,37 +212,11 @@ public class OpenRouterTTS : MonoBehaviour
             timeout = 60
         };
         req.SetRequestHeader("Content-Type", "application/json");
-        req.SetRequestHeader("xi-api-key", elevenKey);
+        req.SetRequestHeader("xi-api-key", ElevenKey);
         return req;
     }
 
-    UnityWebRequest BuildOpenRouterRequest(string text, string voice, string direction)
-    {
-        // Built by hand so optional fields are omitted instead of sent empty.
-        var json = new StringBuilder("{");
-        json.Append("\"model\":").Append(Json(model));
-        json.Append(",\"input\":").Append(Json(text));
-        json.Append(",\"response_format\":\"pcm\"");
-        if (!string.IsNullOrWhiteSpace(voice)) json.Append(",\"voice\":").Append(Json(voice.Trim()));
-        if (!string.IsNullOrWhiteSpace(direction)) json.Append(",\"instructions\":").Append(Json(direction.Trim()));
-        if (Mathf.Abs(speed - 1f) > 0.001f)
-            json.Append(",\"speed\":").Append(speed.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
-        json.Append('}');
-
-        var req = new UnityWebRequest(Endpoint, UnityWebRequest.kHttpVerbPOST)
-        {
-            uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json.ToString())),
-            downloadHandler = new DownloadHandlerBuffer(),
-            timeout = 60
-        };
-        req.SetRequestHeader("Content-Type", "application/json");
-        req.SetRequestHeader("Authorization", "Bearer " + apiKey);
-        req.SetRequestHeader("HTTP-Referer", "https://github.com/klysman08/Mate-Engine");
-        req.SetRequestHeader("X-Title", "MateSusu");
-        return req;
-    }
-
-    IEnumerator SendRoutine(UnityWebRequest req, int defaultRate, string label, Action<byte[], int> onDone, Action<string> onError)
+    IEnumerator ElevenRoutine(UnityWebRequest req, Action<byte[], int> onDone, Action<string> onError)
     {
         current = req;
         yield return req.SendWebRequest();
@@ -265,28 +224,119 @@ public class OpenRouterTTS : MonoBehaviour
         if (!aborted) current = null;
 
         byte[] pcm = null;
-        int rate = defaultRate;
         try
         {
             if (aborted) yield break;
             if (req.result != UnityWebRequest.Result.Success)
             {
                 string err = $"TTS failed ({req.responseCode}): {req.downloadHandler.text}";
-                Debug.LogWarning($"[{label}] " + err);
+                Debug.LogWarning("[ElevenLabs] " + err);
                 onError?.Invoke(err);
                 yield break;
             }
-            rate = ParseRate(req.GetResponseHeader("Content-Type") ?? "", defaultRate);
             pcm = req.downloadHandler.data;
         }
-        finally
-        {
-            req.Dispose();
-        }
+        finally { req.Dispose(); }
 
         if (pcm == null || pcm.Length < 2) { onError?.Invoke("TTS returned no audio"); yield break; }
-        onDone?.Invoke(pcm, rate);
+        onDone?.Invoke(pcm, ElevenSampleRate);
     }
+
+    /// <summary>Gemini TTS through generateContent. The audio comes back base64 inside the JSON answer, as raw PCM
+    /// (or a WAV file, which is unwrapped). If the current request shape is refused, the older one is tried once.</summary>
+    IEnumerator GeminiRoutine(string text, string style, Action<byte[], int> onDone, Action<string> onError)
+    {
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            string body = BuildGeminiBody(text, style, geminiLegacyShape);
+            var req = new UnityWebRequest(SusuChat.ApiRoot + UnityWebRequest.EscapeURL(geminiModel) + ":generateContent", UnityWebRequest.kHttpVerbPOST)
+            {
+                uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body)),
+                downloadHandler = new DownloadHandlerBuffer(),
+                timeout = 90
+            };
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.SetRequestHeader("x-goog-api-key", GeminiKey);
+
+            current = req;
+            yield return req.SendWebRequest();
+            bool aborted = current != req;
+            if (!aborted) current = null;
+
+            string answer;
+            long code;
+            bool ok;
+            try
+            {
+                if (aborted) yield break;
+                answer = req.downloadHandler.text;
+                code = req.responseCode;
+                ok = req.result == UnityWebRequest.Result.Success;
+            }
+            finally { req.Dispose(); }
+
+            if (!ok)
+            {
+                if (code == 400 && !geminiLegacyShape)
+                {
+                    Debug.Log("[SusuTTS] Gemini refused the request shape, trying the older one: " + Short(answer));
+                    geminiLegacyShape = true;
+                    continue;
+                }
+                string err = $"TTS failed ({code}): {Short(answer)}";
+                Debug.LogWarning("[Gemini TTS] " + err);
+                onError?.Invoke(err);
+                yield break;
+            }
+
+            GeminiAudio reply = null;
+            try { reply = JsonUtility.FromJson<GeminiAudio>(answer); } catch (Exception) { }
+            var inline = reply?.candidates != null && reply.candidates.Length > 0 && reply.candidates[0].content?.parts != null
+                ? reply.candidates[0].content.parts.Select(p => p.inlineData).FirstOrDefault(d => d != null && !string.IsNullOrEmpty(d.data))
+                : null;
+            if (inline == null) { onError?.Invoke("Gemini TTS returned no audio: " + Short(answer)); yield break; }
+
+            byte[] bytes;
+            try { bytes = Convert.FromBase64String(inline.data); }
+            catch (FormatException) { onError?.Invoke("Gemini TTS returned bad audio data"); yield break; }
+
+            int rate = ParseRate(inline.mimeType ?? "", GeminiSampleRate);
+            byte[] pcm = WavUtil.TryUnwrap(bytes, ref rate) ?? bytes;
+            if (pcm.Length < 2) { onError?.Invoke("Gemini TTS returned no audio"); yield break; }
+            onDone?.Invoke(pcm, rate);
+            yield break;
+        }
+    }
+
+    string BuildGeminiBody(string text, string style, bool legacy)
+    {
+        var json = new StringBuilder("{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":");
+        if (legacy)
+        {
+            // Older models take the direction as part of the text and a prebuilt voice name.
+            json.Append(Json(string.IsNullOrWhiteSpace(style) ? text : $"Say it as {style}: {text}")).Append("}]}]");
+            json.Append(",\"generationConfig\":{\"responseModalities\":[\"AUDIO\"],\"speechConfig\":{\"voiceConfig\":{\"prebuiltVoiceConfig\":{\"voiceName\":")
+                .Append(Json(geminiVoice)).Append("}}}}}");
+            return json.ToString();
+        }
+        json.Append(Json(text));
+        if (!string.IsNullOrWhiteSpace(style)) json.Append(",\"speech_metadata\":{\"style\":").Append(Json(style)).Append('}');
+        json.Append("}]}]");
+        json.Append(",\"generationConfig\":{\"responseModalities\":[\"AUDIO\"],\"speechConfig\":{\"voiceConfig\":{\"voice\":")
+            .Append(Json(geminiVoice)).Append("}}");
+        json.Append(",\"responseFormat\":{\"audio\":{\"mimeType\":\"AUDIO_L16\",\"sampleRate\":").Append(GeminiSampleRate).Append("}}}}");
+        return json.ToString();
+    }
+
+    static string Short(string s) => string.IsNullOrEmpty(s) ? "" : s.Length > 300 ? s.Substring(0, 300) : s;
+
+#pragma warning disable 0649 // filled by JsonUtility
+    [Serializable] class GeminiAudio { public GeminiCandidate[] candidates; }
+    [Serializable] class GeminiCandidate { public GeminiContent content; }
+    [Serializable] class GeminiContent { public GeminiPart[] parts; }
+    [Serializable] class GeminiPart { public GeminiInline inlineData; }
+    [Serializable] class GeminiInline { public string mimeType; public string data; }
+#pragma warning restore 0649
 
     /// <summary>Plays a clip through Susu's voice source with lip sync and the talking animation.</summary>
     /// <param name="pitchOverride">&gt; 0 plays at this pitch instead of the TTS pitch setting (e.g. 1 for pre-recorded voices).</param>
@@ -294,7 +344,7 @@ public class OpenRouterTTS : MonoBehaviour
     {
         if (clip == null) return;
         if (source.isPlaying) source.Stop();
-        StartCoroutine(PlayRoutine(clip, onStarted, onFinished, destroyWhenDone, pitchOverride > 0f ? pitchOverride : PlaybackPitch));
+        StartCoroutine(PlayRoutine(clip, onStarted, onFinished, destroyWhenDone, pitchOverride > 0f ? pitchOverride : 1f));
     }
 
     IEnumerator PlayRoutine(AudioClip clip, Action onStarted, Action onFinished, bool destroyWhenDone, float playPitch)
@@ -434,12 +484,11 @@ public class OpenRouterTTS : MonoBehaviour
         for (int i = 0; i < count; i++)
             samples[i] = (short)(pcm[2 * i] | (pcm[2 * i + 1] << 8)) / 32768f;
 
-        var clip = AudioClip.Create("OpenRouterTTS", count, 1, rate, false);
+        var clip = AudioClip.Create("SusuTTS", count, 1, rate, false);
         clip.SetData(samples, 0);
         return clip;
     }
 
-    static string Show(string v) => string.IsNullOrWhiteSpace(v) ? "(default)" : v;
 
     static string Json(string s)
     {

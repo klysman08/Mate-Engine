@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// The chat with Susu. A window in the app's own frame (cloned from the Alarm window, like Voices and AI):
 /// messages as bubbles - yours on the right, hers on the left - that scroll, and one row at the bottom with
 /// the text box, the microphone and send. The header has new chat, AI settings and close.
-/// It talks to OpenRouter only and replaces the old chat panel, whose local model is never started:
+/// It talks to Google Gemini and replaces the old chat panel, whose local model is never started:
 /// the radial "chat" slice and anything else that opens the old panel lands here.
 /// </summary>
 public class SusuChatWindow : MonoBehaviour
@@ -172,7 +172,7 @@ public class SusuChatWindow : MonoBehaviour
         if (window == null || busy || string.IsNullOrWhiteSpace(text)) return false;
         text = text.Trim();
 
-        var chat = OpenRouterChat.Instance;
+        var chat = SusuChat.Instance;
         Add(text, true);
         var reply = Add("...", false);
         stickToBottom = true;
@@ -183,13 +183,13 @@ public class SusuChatWindow : MonoBehaviour
         sendButton.interactable = false;
         SetTalking(true);
         chat.Chat(text, chat.BuildSystemPrompt(null),
-            partial => SetText(reply, OpenRouterTTS.StripAudioTags(partial)),
+            partial => SetText(reply, SusuTTS.StripAudioTags(partial)),
             full =>
             {
-                SetText(reply, OpenRouterTTS.StripAudioTags(full));
+                SetText(reply, SusuTTS.StripAudioTags(full));
                 Done();
                 // Keep the talking animation while the voice plays.
-                var tts = OpenRouterTTS.Instance;
+                var tts = SusuTTS.Instance;
                 if (tts == null || !tts.Speak(full, null, () => SetTalking(false))) SetTalking(false);
             },
             error =>
@@ -216,12 +216,12 @@ public class SusuChatWindow : MonoBehaviour
     /// <summary>Forgets the conversation: empties the window and the context sent to the model.</summary>
     public void NewChat()
     {
-        if (OpenRouterChat.Instance != null)
+        if (SusuChat.Instance != null)
         {
-            OpenRouterChat.Instance.Cancel();
-            OpenRouterChat.Instance.ClearHistory();
+            SusuChat.Instance.Cancel();
+            SusuChat.Instance.ClearHistory();
         }
-        if (OpenRouterTTS.Instance != null) OpenRouterTTS.Instance.Stop();
+        if (SusuTTS.Instance != null) SusuTTS.Instance.Stop();
         foreach (var m in messages) if (m.bubble != null) Destroy(m.bubble.gameObject);
         messages.Clear();
         Done();
@@ -319,10 +319,10 @@ public class SusuChatWindow : MonoBehaviour
     {
         if (emptyHint == null) return;
         emptyHint.gameObject.SetActive(messages.Count == 0);
-        bool hasKey = SusuAiSettings.OpenRouterKey.Length > 0;
+        bool hasKey = SusuAiSettings.GeminiKey.Length > 0;
         emptyHint.text = hasKey
             ? "Say hi to Susu!\n<size=75%>Type below, or tap the microphone and talk.</size>"
-            : "Susu needs an OpenRouter API key to chat.\n<size=75%>Open AI settings (the sliders button above) and paste yours.</size>";
+            : "Susu needs a Gemini API key to chat.\n<size=75%>Get one free at aistudio.google.com, then open AI settings (the sliders button above) and paste it.</size>";
     }
 
     // ---------- Microphone ----------

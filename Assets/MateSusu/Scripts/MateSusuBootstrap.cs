@@ -17,9 +17,9 @@ public static class MateSusuBootstrap
         Object.DontDestroyOnLoad(Root);
 
         // Always there: the key can be typed later in the AI window.
-        Root.AddComponent<OpenRouterChat>().Configure();
+        Root.AddComponent<SusuChat>();
 
-        Root.AddComponent<OpenRouterTTS>();
+        Root.AddComponent<SusuTTS>();
         Root.AddComponent<SusuVoiceLines>();
         Root.AddComponent<SusuSystemAudio>();
         Root.AddComponent<SusuAutoTalk>();
@@ -31,5 +31,6 @@ public static class MateSusuBootstrap
         Root.AddComponent<SusuVoicesMenu>();
         Root.AddComponent<SusuAiMenu>();
         Root.AddComponent<SusuChatWindow>();
+        Root.AddComponent<SusuModels>();
     }
 }
