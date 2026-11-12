@@ -18,12 +18,12 @@ public static class SusuMotionLibraryBuilder
     const string ME = "Assets/MATE ENGINE - Animations/PET_MISC/";
     const string EB = AnimRoot + "/EmoteBox/";   // Necocoya EmoteBox v3.31 humanoid .anim emotes
     const string VS = AnimRoot + "/VRSuya/";     // VRSuya dances: personal use only, kept out of git
-    const string SY = AnimRoot + "/Syukusei/";   // Necocoya Syukusei dance: personal use only, kept out of git
     const string PC = AnimRoot + "/Poses/Chiu/";       // single-frame poses, kept out of git
-    const float Hold = 3.2f;
+    const string KA = AnimRoot + "/Kawaii/KA_";  // KAWAII ANIMATIONS 100 (Asset Store): in builds, not in git
+    const float Hold = 3.2f;                     // seconds a single-frame pose is held
 
     /// <summary>Folders whose licences allow personal use only: left out of public builds.</summary>
-    static readonly string[] LocalOnly = { VS, SY, PC };                     // seconds a single-frame pose is held
+    static readonly string[] LocalOnly = { VS, PC };
 
     // name, asset path, clip name suffix ("" = the asset's only clip), start s, end s (0 = clip end)
     static readonly (string name, string path, string clip, float start, float end)[] Table =
@@ -79,12 +79,61 @@ public static class SusuMotionLibraryBuilder
         ("cossack",    EB + "08_Emote_CossackDance.anim",             "", 0f, 4.0f),   // squat-kick dance, loop
         // VRSuya (only present on machines that own it)
         ("doodle",     VS + "VRSuya_Doodle_Dance.anim",               "", 0f, 4.4f),   // short loop
-        // Dances for SusuDances (see DanceSpeed): full choreographies, or a loop repeated for a while
-        ("syukusei_a",   SY + "Syukusei_A.anim",                      "", 0f, 0f),
-        ("syukusei_b",   SY + "Syukusei_B.anim",                      "", 0f, 0f),
-        ("doodle_dance", VS + "VRSuya_Doodle_Dance.anim",             "", 0f, 17.6f),
-        ("kakapo_dance", EB + "07_Emote_Kakapo-Normal_OneLoop.anim",  "", 0f, 15.6f),
-        ("cossack_dance", EB + "08_Emote_CossackDance.anim",          "", 0f, 16f),
+        // KAWAII ANIMATIONS 100: gestures, reactions and talking loops (only present on machines that own the pack)
+        ("breathe",           KA + "Idle01_breathing.fbx",             "", 0f, 0f),
+        ("lookaround2",       KA + "Idle02_LookLeftAndRight.fbx",      "", 0f, 0f),
+        ("lookhands",         KA + "Idle03_LookAtHands.fbx",           "", 0f, 0f),
+        ("lookfeet",          KA + "Idle04_LookAtFeet.fbx",            "", 0f, 0f),
+        ("kstretch",          KA + "Idle05_Stretch.fbx",               "", 0f, 0f),
+        ("kidea",             KA + "Idle08_ComeUpWithAnIdea.fbx",      "", 0f, 0f),
+        ("waiting",           KA + "Idle09_Waiting.fbx",               "", 0f, 0f),
+        ("lookback",          KA + "Idle11_LookingBack.fbx",           "", 0f, 0f),
+        ("leanforward",       KA + "Idle12_LeaningForward.fbx",        "", 0f, 0f),
+        ("kwave",             KA + "Idle16_WaveHands.fbx",             "", 0f, 0f),
+        ("shy",               KA + "Idle18_Shy.fbx",                   "", 0f, 0f),
+        ("shyrefuse",         KA + "Idle19_ShyRefusal.fbx",            "", 0f, 7f),
+        ("triplepose",        KA + "Idle20_TriplePose.fbx",            "", 0f, 0f),
+        ("cheers",            KA + "Idle25_Cheers.fbx",                "", 0f, 6f),
+        ("shout",             KA + "Idle26_Shout.fbx",                 "", 0f, 0f),
+        ("angry",             KA + "Idle27_Angry.fbx",                 "", 0f, 0f),
+        ("klaugh",            KA + "Idle28_Laugh.fbx",                 "", 0f, 0f),
+        ("surprised",         KA + "Idle29_Surprised.fbx",             "", 0f, 0f),
+        ("stretch2",          KA + "Idle30_Stretch2.fbx",              "", 0f, 8f),
+        ("fingersnap",        KA + "Idle35_FingerSnap.fbx",            "", 0f, 0f),
+        ("yay",               KA + "Idle36_Yay.fbx",                   "", 0f, 0f),
+        ("tsundere",          KA + "Idle37_Tsundere.fbx",              "", 0f, 0f),
+        ("cry",               KA + "Idle38_Cry.fbx",                   "", 0f, 0f),
+        ("cutearm",           KA + "Idle39_CuteArmUp.fbx",             "", 0f, 0f),
+        ("crosslegs",         KA + "Idle40_CrossLegs.fbx",             "", 0f, 0f),
+        ("shypose",           KA + "Idle41_CuteShyPose.fbx",           "", 0f, 0f),
+        ("taunt",             KA + "Idle42_Taunt.fbx",                 "", 0f, 0f),
+        ("handhip",           KA + "Idle43_HandOnHip.fbx",             "", 0f, 0f),
+        ("bow",               KA + "Idle44_GreetingBow.fbx",           "", 0f, 0f),
+        ("waveslight",        KA + "Idle45_WaveHandSlightly.fbx",      "", 0f, 0f),
+        ("curtsy",            KA + "Idle52_Curtsy.fbx",                "", 0f, 0f),
+        ("kiss",              KA + "Idle59_Kiss1_1.fbx",               "", 0f, 0f),
+        ("thumbsup",          KA + "Idle65_ThumbsUp.fbx",              "", 0f, 0f),
+        ("jumpjoy",           KA + "Idle66_JumpForJoy.fbx",            "", 0f, 0f),
+        ("feeldown",          KA + "Idle67_FeelDown.fbx",              "", 0f, 0f),
+        ("surprise2",         KA + "Idle68_Surprise.fbx",              "", 0f, 0f),
+        ("surprise3",         KA + "Idle69_Surprise2.fbx",             "", 0f, 0f),
+        ("catpose",           KA + "Idle71_CatPose.fbx",               "", 0f, 0f),
+        ("leanin",            KA + "Idle72_LeanForward.fbx",           "", 0f, 0f),
+        ("idolpose",          KA + "Idle73_IdolPose.fbx",              "", 0f, 0f),
+        ("kcheer",            KA + "Idle74_Cheer.fbx",                 "", 0f, 0f),
+        ("kpoint",            KA + "Idle75_Pointing.fbx",              "", 0f, 0f),
+        ("motivated",         KA + "Idle76_MotivatedPose.fbx",         "", 0f, 0f),
+        ("kpresent",          KA + "Idle78_Present1_1.fbx",            "", 0f, 6f),
+        ("talk",              KA + "Speak01_Normal_Loop.fbx",          "", 0f, 3.5f),
+        ("talk_explain",      KA + "Speak02_Explaining_Loop.fbx",      "", 0f, 3.5f),
+        ("talk_excited",      KA + "Speak03_Excited_Loop.fbx",         "", 0f, 3.5f),
+        ("talk_calm",         KA + "Speak04_Calm_Loop.fbx",            "", 0f, 3.5f),
+        ("talk_scold",        KA + "Speak05_PointingFingerScolding_Loop.fbx", "", 0f, 3.5f),
+        ("talk_point",        KA + "Speak06_PointingFingerCalmly_Loop.fbx", "", 0f, 3.5f),
+        ("talk_chatty",       KA + "Speak07_Chatty_Loop.fbx",          "", 0f, 3.5f),
+        ("talk_pout",         KA + "Speak08_ArmsCrossedPouting_Loop.fbx", "", 0f, 3.5f),
+        ("talk_armscrossed",  KA + "Speak09_ArmsCrossedCalm_Loop.fbx", "", 0f, 3.5f),
+        ("talk_shy",          KA + "Speak10_Shy_Loop.fbx",             "", 0f, 3.5f),
         // Single-frame poses, held for a moment (only on machines that have the pose packs)
         ("pose_stretch",  PC + "chiu_260307-2.anim",     "", 0f, Hold),   // one arm up, hand behind the head
         ("pose_whisper",  PC + "chiu_260307-3.anim",     "", 0f, Hold),   // both hands to the mouth
@@ -100,17 +149,11 @@ public static class SusuMotionLibraryBuilder
     /// like eating or a face-palm).</summary>
     static readonly HashSet<string> Idle = new HashSet<string>
     {
-        "lookaround", "stretch", "tilt", "sway", "behindback", "foldarms", "watch", "phone", "shimmy", "proud",
-        "impatient", "idea", "taphead", "cheekhand", "flirty", "wave", "wave2", "peace", "yoshi", "bunny", "giggle",
-        "happy", "nod", "shrug", "happydance", "shypoint", "explain", "drink", "clap", "kakapo", "doodle",
-        "pose_stretch", "pose_whisper", "pose_vsign", "pose_think", "pose_hideface", "pose_offer", "pose_shh", "pose_tada",
-    };
-
-    /// <summary>Motions SusuDances may play while music is on, with their playback speed.</summary>
-    static readonly Dictionary<string, float> DanceSpeed = new Dictionary<string, float>
-    {
-        { "syukusei_a", 1.33f }, { "syukusei_b", 1.33f }, // the author's ReadMe: the clips are slow, play at about 1.33
-        { "doodle_dance", 1f }, { "kakapo_dance", 1f }, { "cossack_dance", 1f },
+        "breathe", "lookaround2", "lookhands", "lookfeet", "kstretch", "kidea", "waiting", "lookback", "leanforward",
+        "waveslight", "crosslegs", "handhip", "cutearm", "catpose", "idolpose", "triplepose", "stretch2", "shypose",
+        "fingersnap", "leanin",
+        "lookaround", "tilt", "behindback", "cheekhand", "peace", "yoshi", "bunny",
+        "pose_think", "pose_vsign", "pose_shh", "pose_stretch",
     };
 
     [MenuItem("Tools/MateSusu/Build Motion Library")]
@@ -130,8 +173,7 @@ public static class SusuMotionLibraryBuilder
             var clip = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>()
                 .FirstOrDefault(c => !c.name.StartsWith("__preview__") && (clipName == "" || c.name.EndsWith(clipName)));
             if (clip == null) { report.Append("missing clip for '").Append(name).Append("': ").Append(path).Append('\n'); continue; }
-            bool dance = DanceSpeed.TryGetValue(name, out float speed);
-            motions.Add(new SusuMotionLibrary.Motion { name = name, clip = clip, start = start, end = end, speed = dance ? speed : 1f, dance = dance, idle = Idle.Contains(name), noFootIK = !HasFootGoals(clip) });
+            motions.Add(new SusuMotionLibrary.Motion { name = name, clip = clip, start = start, end = end, idle = Idle.Contains(name), noFootIK = !HasFootGoals(clip) });
         }
 
         var lib = AssetDatabase.LoadAssetAtPath<SusuMotionLibrary>(LibraryPath);

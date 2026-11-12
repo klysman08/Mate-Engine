@@ -50,7 +50,7 @@ public class SusuIdleMotions : MonoBehaviour
         }
 
         var m = Pick();
-        if (m != null && player.Play(m.clip, m.start, m.PlayTime, fade, m.Speed, false, !m.noFootIK))
+        if (m != null && player.Play(m.clip, m.start, m.PlayTime, fade, m.Speed, !m.noFootIK))
         {
             recent.Add(m.name);
             if (recent.Count > memory) recent.RemoveAt(0);

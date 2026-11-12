@@ -39,10 +39,12 @@ below this section is the original Mate Engine README.
 - Switch spoken replies, the text over her head and idle motions on or off.
 
 **Motions**
-- Ready-made humanoid clips (Rokoko mocap, Quaternius UAL2, EmoteBox) played on top of the Mate Engine animator.
-- 30+ calm **idle motions** (looking around, stretching, checking her phone, waving, posing...) so she does not loop
-  the same few idles.
-- Extra **dances** mixed in with the built-in ones when music plays.
+- Ready-made humanoid clips (KAWAII ANIMATIONS 100, Rokoko mocap, Quaternius UAL2, EmoteBox) played on top of the
+  Mate Engine animator.
+- Every voice line has one or more matching motions: a talking gesture followed by a reaction (bow, shy, laugh,
+  thumbs up, cheer...).
+- 30 calm **idle motions** (breathing, looking around, stretching, crossing her legs, cute poses...) between lines,
+  so she does not loop the same few idles.
 
 ### Setup
 
@@ -64,7 +66,7 @@ Voice lines are generated with `Tools/MateSusu/generate_voice_lines_elevenlabs.p
 - Mate Engine by [shinyflvre](https://github.com/shinyflvre/Mate-Engine) — Mixed GNU AGPL v3 & MateProv2 licence
   ([LICENSE.md](LICENSE.md)). MateSusu is free, non-commercial and its full source is in this repository.
 - Animation credits: [`Assets/MateSusu/Animations/CREDITS.md`](Assets/MateSusu/Animations/CREDITS.md). Packs whose
-  licences allow personal use only (VRSuya, Syukusei, Chiu poses) are not in the repository or in the release.
+  licences allow personal use only (VRSuya, Chiu poses) are not in the repository or in the release.
 
 ---
 

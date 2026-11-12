@@ -18,7 +18,6 @@ public class SusuMotionLibrary : ScriptableObject
         public float start;
         public float end; // <= 0 means the end of the clip; past the clip's end = loop it / hold its last pose
         public float speed = 1f;
-        public bool dance; // may be picked by SusuDances while music is playing
         public bool idle;  // may be picked by SusuIdleMotions when nothing else is going on
         public bool noFootIK; // the clip has no foot goal curves (pose packs exported without them)
         public float Duration => Mathf.Max(0.1f, (end > 0f ? end : clip != null ? clip.length : 0f) - start);

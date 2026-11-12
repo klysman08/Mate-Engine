@@ -19,11 +19,7 @@ public class SusuClipPlayer : MonoBehaviour
         "isBigScreen", "isBigScreenSaver", "isBigScreenAlarm", "HideLeft", "HideRight",
     };
 
-    const string DancingFlag = "isDancing";
-
     public bool IsPlaying => graph.IsValid() && outTarget > 0f;
-    /// <summary>True while the clip on screen is one of Susu's own dances (played over Mate Engine's dancing).</summary>
-    public bool IsDancing => IsPlaying && danceMode;
 
     PlayableGraph graph;
     AnimationPlayableOutput output;
@@ -33,7 +29,6 @@ public class SusuClipPlayer : MonoBehaviour
     Animator bound;
     int current = -1;
     float outWeight, outTarget, fadeTime = 0.35f, stopAt;
-    bool danceMode;
 
     void Awake() { Instance = this; }
 
@@ -52,27 +47,19 @@ public class SusuClipPlayer : MonoBehaviour
     }
 
     /// <summary>True while Mate Engine is dragging, dancing, sitting, sleeping, hiding...</summary>
-    public static bool AvatarBusy(Animator a) => AvatarBusy(a, false);
-
-    /// <param name="dancing">true = asking for a dance clip: the avatar must be dancing, and nothing else.</param>
-    static bool AvatarBusy(Animator a, bool dancing)
+    public static bool AvatarBusy(Animator a)
     {
         if (a == null) return true;
-        bool isDancing = false;
         foreach (var p in a.parameters)
-        {
-            if (p.type != AnimatorControllerParameterType.Bool || System.Array.IndexOf(BusyFlags, p.name) < 0 || !a.GetBool(p.nameHash)) continue;
-            if (dancing && p.name == DancingFlag) { isDancing = true; continue; }
-            return true;
-        }
-        return dancing && !isDancing;
+            if (p.type == AnimatorControllerParameterType.Bool && System.Array.IndexOf(BusyFlags, p.name) >= 0 && a.GetBool(p.nameHash))
+                return true;
+        return false;
     }
 
-    /// <summary>Play <paramref name="clip"/> from <paramref name="start"/> seconds for <paramref name="duration"/> real seconds (≤0 = to the end).
-    /// <paramref name="dance"/> clips play only while Mate Engine is dancing; everything else only while it is not.</summary>
-    public bool Play(AnimationClip clip, float start = 0f, float duration = 0f, float fade = 0.35f, float speed = 1f, bool dance = false, bool footIK = true)
+    /// <summary>Play <paramref name="clip"/> from <paramref name="start"/> seconds for <paramref name="duration"/> real seconds (≤0 = to the end).</summary>
+    public bool Play(AnimationClip clip, float start = 0f, float duration = 0f, float fade = 0.35f, float speed = 1f, bool footIK = true)
     {
-        if (clip == null || !EnsureGraph() || AvatarBusy(bound, dance)) return false;
+        if (clip == null || !EnsureGraph() || AvatarBusy(bound)) return false;
         if (speed <= 0.01f) speed = 1f;
 
         int next = current < 0 ? 0 : 1 - current;
@@ -96,7 +83,6 @@ public class SusuClipPlayer : MonoBehaviour
             slotWeight[1 - next] = 0f;
         }
         current = next;
-        danceMode = dance;
         fadeTime = Mathf.Max(0.05f, fade);
         outTarget = 1f;
         stopAt = Time.time + (duration > 0f ? duration : Mathf.Max(0.1f, (clip.length - start) / speed));
@@ -141,7 +127,7 @@ public class SusuClipPlayer : MonoBehaviour
         if (!graph.IsValid()) return;
         if (bound == null || !bound.isActiveAndEnabled) { DestroyGraph(); return; } // avatar was swapped
 
-        if (outTarget > 0f && (Time.time >= stopAt - fadeTime || AvatarBusy(bound, danceMode))) outTarget = 0f;
+        if (outTarget > 0f && (Time.time >= stopAt - fadeTime || AvatarBusy(bound))) outTarget = 0f;
 
         float step = Time.deltaTime / fadeTime;
         for (int i = 0; i < 2; i++)

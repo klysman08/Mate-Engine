@@ -88,9 +88,9 @@ AgentScreens/
 Assets/MateSusu/Animations/VRSuya/
 Assets/MateSusu/Animations/VRSuya.meta
 
-# Syukusei dance (Necocoya): personal use only per its ReadMe, so it stays local
-Assets/MateSusu/Animations/Syukusei/
-Assets/MateSusu/Animations/Syukusei.meta
+# KAWAII ANIMATIONS 100 (Unity Asset Store): may ship inside builds, but the source files must not be redistributed
+Assets/MateSusu/Animations/Kawaii/
+Assets/MateSusu/Animations/Kawaii.meta
 # Chiu pose pack: no licence text shipped with it, so it stays local until its terms are known
 Assets/MateSusu/Animations/Poses/
 Assets/MateSusu/Animations/Poses.meta

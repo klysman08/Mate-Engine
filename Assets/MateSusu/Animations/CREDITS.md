@@ -19,16 +19,16 @@ Unity Humanoid and played through `SusuClipPlayer`.
 - Used: `01_Emote_tefuri1`, `02_Emote_tefuri3`, `03_Emote_peace1`, `04_Emote_hawawa`, `05_Emote_umauma_OneLoop`,
   `06_Emote_yoshi`, `07_Emote_Kakapo-Normal_OneLoop`, `08_Emote_CossackDance` (Unity humanoid `.anim`).
 
+## Kawaii/ (not in the repository)
+- **KAWAII ANIMATIONS 100 v1.10.1** (Unity Asset Store). 54 clips are used: gestures and reactions (bow, wave, shy,
+  laugh, thumbs up, cheer...), the ten talking loops (`Speak01`-`Speak10`) and calm idles (breathing, looking around,
+  stretching...). Asset Store terms allow the clips inside a built player but not redistributing the source files, so
+  the folder is listed in `.gitignore` and the motions are skipped where it is missing.
+
 ## VRSuya/ (not in the repository)
 - **Doodle Dance** by VRSuya. Its user agreement allows personal use only and forbids redistributing the data
   (original or modified) without permission and using it in commercial games/videos, so this folder is listed in
   `.gitignore` and stays on the owner's machine. The `doodle` motion is skipped automatically where the file is missing.
-
-## Syukusei/ (not in the repository)
-- **粛清ダンスモーション v1.10** (Syukusei dance, parts A and B) by アンテナショップ【ねここや】 (Necocoya).
-- Its ReadMe asks for personal use only and forbids claiming authorship, defamatory use, paid redistribution and use in
-  games meant for sale, so this folder is listed in `.gitignore`. The clips are slow by design; they are played at 1.33x as
-  the ReadMe suggests. Used as the `syukusei_a` / `syukusei_b` dances (see `SusuDances`), skipped where the files are missing.
 
 ## Poses/Chiu/ (not in the repository)
 - **Chiu 2026-03 pose set**: single-frame humanoid pose clips. No licence text came with the files, so the folder is
